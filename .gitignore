@@ -9,3 +9,4 @@ attendance.db
 backend/attendance.db
 uploads/
 *.log
+firmware/device_settings.json
