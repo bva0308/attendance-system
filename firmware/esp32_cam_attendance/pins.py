@@ -17,7 +17,13 @@ class Pins:
     HREF_GPIO_NUM = 23
     PCLK_GPIO_NUM = 22
 
-    R307_RX_PIN = 14
-    R307_TX_PIN = 15
+    # Sensor wiring:
+    # R307 TX -> ESP32 RX2 (GPIO16)
+    # R307 RX -> ESP32 TX2 (GPIO17)
+    R307_UART_RX_PIN = 16
+    R307_UART_TX_PIN = 17
+    # Legacy aliases kept so older notes/scripts do not break.
+    R307_RX_PIN = R307_UART_TX_PIN
+    R307_TX_PIN = R307_UART_RX_PIN
     RELAY_PIN = 13
     STATUS_LED_PIN = 33
