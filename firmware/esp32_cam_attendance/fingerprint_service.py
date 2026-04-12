@@ -1,7 +1,11 @@
 try:
     from .runtime import log, monotonic_ms, sleep_ms, ticks_diff
+    from .pins import Pins
+    from .r307s import R307Sensor
 except ImportError:
     from runtime import log, monotonic_ms, sleep_ms, ticks_diff
+    from pins import Pins
+    from r307s import R307Sensor
 
 
 FINGERPRINT_OK = 0
@@ -36,7 +40,9 @@ class NullFingerprintSensor:
 
 class FingerprintService:
     def __init__(self, sensor=None):
-        self.sensor = sensor or NullFingerprintSensor()
+        if sensor is None:
+            sensor = R307Sensor(tx_pin=Pins.R307_UART_TX_PIN, rx_pin=Pins.R307_UART_RX_PIN)
+        self.sensor = sensor
         self.ready = False
 
     def begin(self):
@@ -74,6 +80,23 @@ class FingerprintService:
         if self.sensor.get_matched_template_id() != expected_template_id:
             return False, "wrong finger for matched student"
         return True, "fingerprint matched"
+
+    def identify_template(self, timeout_ms):
+        if not self.ready:
+            return False, 0, "fingerprint sensor unavailable"
+
+        ok, message = self._wait_for_finger_image(timeout_ms)
+        if not ok:
+            return False, 0, message
+        if self.sensor.image_to_template(1) != FINGERPRINT_OK:
+            return False, 0, "failed to convert fingerprint image"
+        if self.sensor.fast_search() != FINGERPRINT_OK:
+            return False, 0, "fingerprint not recognized"
+
+        template_id = int(self.sensor.get_matched_template_id() or 0)
+        if template_id <= 0:
+            return False, 0, "fingerprint template not registered"
+        return True, template_id, "fingerprint matched"
 
     def enroll_next_template(self):
         if not self.ready:
