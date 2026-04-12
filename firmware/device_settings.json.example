@@ -1,0 +1,8 @@
+{
+  "wifi_ssid": "LOKRAJ",
+  "wifi_password": "1808@7870",
+  "backend_base_url": "http://192.168.2.8:5000",
+  "device_id": "esp32cam-lab-01",
+  "device_api_key": "demo-device-key",
+  "status_web_port": 80
+}
