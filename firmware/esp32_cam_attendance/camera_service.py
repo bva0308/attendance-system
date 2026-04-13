@@ -24,6 +24,9 @@ class CameraService:
             log("camera", "camera module unavailable; capture() will return None")
             return False
 
+    def ready(self):
+        return self._ready
+
         try:
             self._camera.init(
                 0,
