@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, request
 
 from auth import device_required
 from database import db
-from models import AttendanceRecord, DeviceCommand, FingerprintProfile, Session, Student
+from models import AttendanceRecord, DeviceCommand, FingerprintProfile, Session, Student, VerificationEvent
 from services_face import verify_face_for_session
 from services_qr import decode_qr_from_bytes
 
@@ -24,6 +24,19 @@ def _serialize_session(session: Session | None):
         "starts_at": session.starts_at.isoformat(),
         "ends_at": session.ends_at.isoformat(),
         "allow_duplicates": session.allow_duplicates,
+    }
+
+
+def _serialize_student(student: Student | None):
+    if not student:
+        return None
+    template_id = student.fingerprint_profile.template_id if student.fingerprint_profile else None
+    return {
+        "id": student.id,
+        "student_code": student.student_code,
+        "full_name": student.full_name,
+        "class_name": student.class_name,
+        "fingerprint_template_id": template_id,
     }
 
 
@@ -131,20 +144,32 @@ def verify_face():
     if not result.matched:
         return jsonify({"ok": False, "error": result.reason, "distance": result.distance}), 400
 
-    template_id = result.student.fingerprint_profile.template_id if result.student.fingerprint_profile else None
-    return jsonify(
-        {
-            "ok": True,
-            "student": {
-                "id": result.student.id,
-                "student_code": result.student.student_code,
-                "full_name": result.student.full_name,
-                "class_name": result.student.class_name,
-                "fingerprint_template_id": template_id,
-            },
-            "distance": result.distance,
-        }
-    )
+    return jsonify({"ok": True, "student": _serialize_student(result.student), "distance": result.distance})
+
+
+@device_bp.route("/resolve-fingerprint-student", methods=["POST"])
+@device_required
+def resolve_fingerprint_student():
+    payload = request.get_json(force=True)
+    session = Session.query.filter_by(session_token=payload["session_token"]).first_or_404()
+    template_id = int(payload.get("template_id") or 0)
+
+    if template_id <= 0:
+        return jsonify({"ok": False, "error": "template_id is required"}), 400
+    if not _session_is_open(session):
+        return jsonify({"ok": False, "error": "session is not currently accepting attendance"}), 409
+
+    profile = FingerprintProfile.query.filter_by(template_id=template_id).first()
+    if profile is None or profile.student is None:
+        return jsonify({"ok": False, "error": "fingerprint template not registered"}), 404
+
+    student = profile.student
+    if not student.active:
+        return jsonify({"ok": False, "error": "student is inactive"}), 409
+    if student.class_name != session.class_name:
+        return jsonify({"ok": False, "error": "student is not assigned to this class"}), 400
+
+    return jsonify({"ok": True, "student": _serialize_student(student)})
 
 
 @device_bp.route("/mark-attendance", methods=["POST"])
@@ -179,3 +204,43 @@ def mark_attendance():
     db.session.add(record)
     db.session.commit()
     return jsonify({"ok": True, "attendance_id": record.id, "timestamp": record.created_at.isoformat()})
+
+
+@device_bp.route("/log-verification-failure", methods=["POST"])
+@device_required
+def log_verification_failure():
+    payload = request.get_json(force=True)
+    session = Session.query.filter_by(session_token=payload["session_token"]).first_or_404()
+    student_id = payload.get("student_id")
+    status = str(payload.get("status") or "rejected")
+
+    if student_id:
+        student = Student.query.get_or_404(int(student_id))
+        record = AttendanceRecord(
+            student=student,
+            session=session,
+            device_id=request.device.id,
+            verified_by_qr=bool(payload.get("verified_by_qr")),
+            verified_by_face=bool(payload.get("verified_by_face")),
+            verified_by_fingerprint=bool(payload.get("verified_by_fingerprint")),
+            note=payload.get("note"),
+            status=status,
+        )
+        db.session.add(record)
+    else:
+        event = VerificationEvent(
+            student_label=payload.get("student_label") or "Unknown fingerprint",
+            class_name=session.class_name,
+            session=session,
+            session_title=session.title,
+            device_id=request.device.id,
+            verified_by_qr=bool(payload.get("verified_by_qr")),
+            verified_by_face=bool(payload.get("verified_by_face")),
+            verified_by_fingerprint=bool(payload.get("verified_by_fingerprint")),
+            note=payload.get("note"),
+            status=status,
+        )
+        db.session.add(event)
+    db.session.commit()
+    created_item = locals().get("record") or locals().get("event")
+    return jsonify({"ok": True, "attendance_id": created_item.id, "timestamp": created_item.created_at.isoformat()})
