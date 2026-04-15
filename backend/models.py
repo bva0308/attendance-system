@@ -101,6 +101,27 @@ class AttendanceRecord(db.Model):
     session = relationship("Session", back_populates="attendance_records")
 
 
+class VerificationEvent(db.Model):
+    __tablename__ = "verification_events"
+
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=True)
+    student_label = db.Column(db.String(120), nullable=True)
+    class_name = db.Column(db.String(80), nullable=True)
+    session_id = db.Column(db.Integer, db.ForeignKey("sessions.id"), nullable=True)
+    session_title = db.Column(db.String(120), nullable=True)
+    device_id = db.Column(db.Integer, db.ForeignKey("devices.id"), nullable=True)
+    verified_by_qr = db.Column(db.Boolean, default=False, nullable=False)
+    verified_by_face = db.Column(db.Boolean, default=False, nullable=False)
+    verified_by_fingerprint = db.Column(db.Boolean, default=False, nullable=False)
+    status = db.Column(db.String(32), default="rejected", nullable=False)
+    note = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    student = relationship("Student")
+    session = relationship("Session")
+
+
 class DeviceCommand(db.Model):
     __tablename__ = "device_commands"
 
