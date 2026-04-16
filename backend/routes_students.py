@@ -6,6 +6,7 @@ from sqlalchemy import func
 from auth import login_required
 from database import db
 from models import AttendanceRecord, Device, DeviceCommand, Session, Student
+from services_reports import query_recent_attendance
 from services_face import enroll_face_profile, face_provider_available
 
 
@@ -58,7 +59,7 @@ def dashboard_home():
         "active_sessions": Session.query.filter_by(is_active=True).count(),
         "attendance_records": AttendanceRecord.query.count(),
     }
-    recent_attendance = AttendanceRecord.query.order_by(AttendanceRecord.created_at.desc()).limit(10).all()
+    recent_attendance = query_recent_attendance(10)
     devices = Device.query.order_by(Device.last_seen_at.desc().nullslast()).all()
     return render_template("dashboard.html", metrics=metrics, recent_attendance=recent_attendance, devices=devices)
 
