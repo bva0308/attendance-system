@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import UTC, datetime, timedelta, timezone
 
 from flask import Flask, render_template
 
@@ -10,6 +10,8 @@ from routes_auth import auth_bp
 from routes_device import device_bp
 from routes_sessions import sessions_bp
 from routes_students import students_bp
+
+NEPAL_TZ = timezone(timedelta(hours=5, minutes=45), name="NPT")
 
 
 def create_app():
@@ -33,13 +35,15 @@ def create_app():
 
     @app.context_processor
     def inject_globals():
-        return {"cfg": config}
+        return {"cfg": config, "display_timezone": "Nepal Time (NPT)"}
 
     @app.template_filter("datetime_display")
     def datetime_display(value: datetime | None) -> str:
         if value is None:
             return "never"
-        return value.strftime("%Y-%m-%d %H:%M:%S")
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        return value.astimezone(NEPAL_TZ).strftime("%Y-%m-%d %H:%M:%S NPT")
 
     @app.errorhandler(404)
     def not_found(_):
