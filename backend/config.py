@@ -15,7 +15,7 @@ class Config:
     admin_password: str = os.getenv("ADMIN_PASSWORD", "Bibha@28")
     admin_password_hash: str = os.getenv(
         "ADMIN_PASSWORD_HASH",
-        "scrypt:32768:8:1$demoSalt$e5e9d0ca6538dc06c0d2c7c065af246a98a6a740249bca7ff280991690e54cf91497b1af6e1d889d7c3fd261bd31d25a4d8244334630bf8c1227bcddc3e39fb1",
+        "scrypt:32768:8:1$fZ6CjngBMeqr4QA8$52fd8b9da11d0c24e8214cf0a08b18e861b07aefbd4de30f92977b9a3a15bfdaa93417821d32e842883714ccc3617eb09239c53f42a7e9154817e71ea0aa5eed",
     )
     face_distance_threshold: float = float(os.getenv("FACE_DISTANCE_THRESHOLD", "0.52"))
     session_qr_prefix: str = os.getenv("SESSION_QR_PREFIX", "ATTEND")
@@ -27,7 +27,7 @@ class Config:
     github_allowed_users: tuple[str, ...] = _split_csv(os.getenv("GITHUB_ALLOWED_USERS", ""))
     github_allowed_emails: tuple[str, ...] = _split_csv(os.getenv("GITHUB_ALLOWED_EMAILS", os.getenv("ADMIN_USERNAME", "")))
     github_scope: str = os.getenv("GITHUB_SCOPE", "read:user user:email")
-    app_host: str = os.getenv("APP_HOST", "127.0.0.1")
+    app_host: str = os.getenv("APP_HOST", "0.0.0.0")
     app_port: int = int(os.getenv("APP_PORT", "5000"))
     debug: bool = os.getenv("DEBUG", "false").lower() == "true"
 
