@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Student' if student else 'New Student' }}{% endblock %}
+{% block content %}
+<section class="two-col">
+  <article class="card">
+    <h2>{{ 'Edit Student' if student else 'Create Student' }}</h2>
+    <form method="post" class="grid-form">
+      <label>Student Code
+        <input type="text" name="student_code" value="{{ student.student_code if student else '' }}" required>
+      </label>
+      <label>Full Name
+        <input type="text" name="full_name" value="{{ student.full_name if student else '' }}" required>
+      </label>
+      <label>Email
+        <input type="email" name="email" value="{{ student.email if student else '' }}">
+      </label>
+      <label>Class / Section
+        <input type="text" name="class_name" value="{{ student.class_name if student else '' }}" required>
+      </label>
+      {% if student %}
+      <label class="checkbox-line"><input type="checkbox" name="active" {% if student.active %}checked{% endif %}> Active</label>
+      {% endif %}
+      <button type="submit">{{ 'Save Changes' if student else 'Create Student' }}</button>
+    </form>
+  </article>
+
+  {% if student %}
+  <article class="card">
+    <h2>Enrollment</h2>
+    <p>Fingerprint template must be enrolled on the physical R307 sensor. Face data is stored only as backend embeddings plus the uploaded photo path.</p>
+
+    <form method="post" action="{{ url_for('students.upload_face', student_id=student.id) }}" enctype="multipart/form-data" class="grid-form">
+      <label>Face Image
+        <input type="file" name="face_image" accept="image/*" required>
+      </label>
+      <button type="submit">Enroll Face</button>
+    </form>
+
+    <hr>
+
+    <form method="post" action="{{ url_for('students.queue_fingerprint', student_id=student.id) }}" class="grid-form">
+      <label>Target Device
+        <select name="device_id" required>
+          {% for device in devices %}
+          <option value="{{ device.id }}">{{ device.display_name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">Queue Fingerprint Enrollment</button>
+    </form>
+
+    <div class="meta-block">
+      <strong>Current fingerprint template:</strong>
+      <span>{{ student.fingerprint_profile.template_id if student.fingerprint_profile else 'Not enrolled' }}</span>
+    </div>
+    <div class="meta-block">
+      <strong>Face samples:</strong>
+      <span>{{ student.face_profiles|length }}</span>
+    </div>
+  </article>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="metric-grid">
+  <article class="metric-card"><span>{{ metrics.students }}</span><strong>Students</strong></article>
+  <article class="metric-card"><span>{{ metrics.active_sessions }}</span><strong>Active Sessions</strong></article>
+  <article class="metric-card"><span>{{ metrics.attendance_records }}</span><strong>Attendance Records</strong></article>
+  <article class="metric-card"><span>{{ metrics.devices }}</span><strong>Devices</strong></article>
+</section>
+
+<section class="two-col">
+  <article class="card">
+    <div class="section-head">
+      <h2>Recent Attendance</h2>
+      <a href="{{ url_for('attendance.attendance_records') }}">View all</a>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Time</th><th>Student</th><th>Session</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for row in recent_attendance %}
+        <tr>
+          <td>{{ row.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td>{{ row.student.full_name }}</td>
+          <td>{{ row.session.title }}</td>
+          <td>{{ row.status }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">No attendance yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </article>
+
+  <article class="card">
+    <div class="section-head">
+      <h2>Device Health</h2>
+      <a href="{{ url_for('students.devices_page') }}">Manage devices</a>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Device</th><th>Last State</th><th>Last Seen</th><th>RSSI</th></tr>
+      </thead>
+      <tbody>
+        {% for device in devices %}
+        <tr>
+          <td>{{ device.display_name }}</td>
+          <td>{{ device.last_status or 'unknown' }}</td>
+          <td>{{ device.last_seen_at.strftime('%Y-%m-%d %H:%M:%S') if device.last_seen_at else 'never' }}</td>
+          <td>{{ device.last_rssi if device.last_rssi is not none else '-' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">No registered devices yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </article>
+</section>
+{% endblock %}
