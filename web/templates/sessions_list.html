@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Sessions{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="section-head">
+    <h2>Sessions</h2>
+    <a class="button-link" href="{{ url_for('sessions.session_create') }}">Create Session</a>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Title</th><th>Class</th><th>Window</th><th>Active</th><th>QR</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for item in sessions %}
+      <tr>
+        <td>{{ item.title }}</td>
+        <td>{{ item.class_name }}</td>
+        <td>{{ item.starts_at.strftime('%Y-%m-%d %H:%M') }} to {{ item.ends_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ 'Yes' if item.is_active else 'No' }}</td>
+        <td><img class="qr-thumb" src="{{ url_for('sessions.session_qr_png', session_id=item.id) }}" alt="Session QR"></td>
+        <td>
+          {% if item.is_active %}
+          <form method="post" action="{{ url_for('sessions.session_deactivate', session_id=item.id) }}"><button type="submit">Deactivate</button></form>
+          {% else %}
+          <form method="post" action="{{ url_for('sessions.session_activate', session_id=item.id) }}"><button type="submit">Activate</button></form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">No sessions yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

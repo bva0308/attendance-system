@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Create Session{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>Create Session</h2>
+  <form method="post" class="grid-form">
+    <label>Session Title
+      <input type="text" name="title" required>
+    </label>
+    <label>Class / Section
+      <input type="text" name="class_name" required>
+    </label>
+    <label>Start Time
+      <input type="datetime-local" name="starts_at" required>
+    </label>
+    <label>End Time
+      <input type="datetime-local" name="ends_at" required>
+    </label>
+    <label class="checkbox-line"><input type="checkbox" name="allow_duplicates"> Allow duplicate attendance</label>
+    <button type="submit">Create Session</button>
+  </form>
+</section>
+{% endblock %}
