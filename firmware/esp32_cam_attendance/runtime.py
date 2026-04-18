@@ -106,7 +106,8 @@ class HttpClient:
     def request(self, method, url, headers=None, data=None, json_body=None):
         headers = headers or {}
         if requests_backend is None:
-            raise RuntimeError("No HTTP client backend is available")
+            log("http", "no HTTP client backend is available")
+            return 0, ""
 
         try:
             if requests_backend.__name__ == "urequests":

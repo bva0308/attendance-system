@@ -53,6 +53,8 @@ class AttendanceStateMachine:
 
     def transition(self, next_state, next_message):
         previous_state = self.state
+        if previous_state == next_state and self.message == next_message:
+            return
         self.state = next_state
         self.message = next_message
         self.state_started_at = monotonic_ms()
@@ -68,6 +70,8 @@ class AttendanceStateMachine:
         ok, heartbeat_session = self.api.post_heartbeat(self.state_name(), self.wifi.rssi())
         if ok:
             self.active_session = heartbeat_session
+        else:
+            self.active_session = SessionInfo()
 
     def check_commands(self):
         if ticks_diff(monotonic_ms(), self.last_command_poll_at) < DeviceConfig.COMMAND_POLL_INTERVAL_MS:
@@ -85,7 +89,7 @@ class AttendanceStateMachine:
         self.do_heartbeat()
         self.check_commands()
 
-        if not self.wifi.is_connected():
+        if not self.wifi.is_connected() and self.state != DeviceState.ERROR_RECOVERY:
             self.transition(DeviceState.ERROR_RECOVERY, "wifi disconnected")
 
         if self.state == DeviceState.IDLE:

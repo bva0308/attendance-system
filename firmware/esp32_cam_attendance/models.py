@@ -48,13 +48,14 @@ class StudentInfo:
     @classmethod
     def from_dict(cls, payload):
         payload = payload or {}
+        template_id = payload.get("fingerprint_template_id", 0)
         return cls(
             valid=bool(payload),
             student_id=payload.get("id", 0),
             student_code=payload.get("student_code", ""),
             full_name=payload.get("full_name", ""),
             class_name=payload.get("class_name", ""),
-            fingerprint_template_id=payload.get("fingerprint_template_id", 0),
+            fingerprint_template_id=template_id or 0,
         )
 
 
