@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<section class="card auth-card">
+  <h2>Admin Login</h2>
+  {% if cfg.github_client_id %}
+  <a class="button-link oauth-button" href="{{ url_for('auth.login_github') }}">Continue with GitHub</a>
+  <p class="auth-divider"><span>or use your admin password</span></p>
+  {% endif %}
+  <form method="post" class="grid-form">
+    <label>Username
+      <input type="text" name="username" value="{{ request.form.get('username', cfg.admin_username) }}" required>
+    </label>
+    <label>Password
+      <input type="password" name="password" placeholder="Enter admin password" required>
+    </label>
+    <button type="submit">Login</button>
+  </form>
+</section>
+{% endblock %}
