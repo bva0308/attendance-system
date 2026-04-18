@@ -1,0 +1,23 @@
+class Pins:
+    PWDN_GPIO_NUM = 32
+    RESET_GPIO_NUM = None
+    XCLK_GPIO_NUM = 0
+    SIOD_GPIO_NUM = 26
+    SIOC_GPIO_NUM = 27
+
+    Y9_GPIO_NUM = 35
+    Y8_GPIO_NUM = 34
+    Y7_GPIO_NUM = 39
+    Y6_GPIO_NUM = 36
+    Y5_GPIO_NUM = 21
+    Y4_GPIO_NUM = 19
+    Y3_GPIO_NUM = 18
+    Y2_GPIO_NUM = 5
+    VSYNC_GPIO_NUM = 25
+    HREF_GPIO_NUM = 23
+    PCLK_GPIO_NUM = 22
+
+    R307_RX_PIN = 14
+    R307_TX_PIN = 15
+    RELAY_PIN = 13
+    STATUS_LED_PIN = 33
