@@ -7,25 +7,39 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   <script defer src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </head>
-<body>
+<body data-endpoint="{{ request.endpoint or '' }}" class="{{ 'app-authenticated' if session.get('admin_authenticated') else 'app-guest' }}">
   <header class="site-header">
-    <div>
-      <h1>Secure Attendance Prototype</h1>
-      <p>IoT-based multi-factor verification for ESP32-CAM + R307</p>
+    <div class="site-header__inner">
+      <div class="brand-lockup">
+        <span class="eyebrow">Attendance Operations</span>
+        <a class="brand-title" href="{{ url_for('students.dashboard_home') if session.get('admin_authenticated') else url_for('auth.login') }}">
+          Secure Attendance System
+        </a>
+        <p class="brand-copy">Student setup, session control, and device verification tracking for the ESP32 attendance workflow.</p>
+      </div>
+      {% if session.get('admin_authenticated') %}
+      <div class="site-header__meta">
+        <div class="site-context">
+          <span class="site-context__label">Signed in</span>
+          <strong>{{ session.get('admin_username') or 'Admin' }}</strong>
+        </div>
+        <nav class="site-nav" aria-label="Primary">
+          <a class="{{ 'nav-link-active' if request.endpoint == 'students.dashboard_home' else '' }}" href="{{ url_for('students.dashboard_home') }}">Dashboard</a>
+          <a class="{{ 'nav-link-active' if request.endpoint in ['students.students_list', 'students.student_create', 'students.student_edit', 'students.upload_face', 'students.queue_fingerprint'] else '' }}" href="{{ url_for('students.students_list') }}">Students</a>
+          <a class="{{ 'nav-link-active' if request.endpoint and request.endpoint.startswith('sessions.') else '' }}" href="{{ url_for('sessions.sessions_list') }}">Sessions</a>
+          <a class="{{ 'nav-link-active' if request.endpoint and request.endpoint.startswith('attendance.') else '' }}" href="{{ url_for('attendance.attendance_records') }}">Attendance</a>
+          <a class="{{ 'nav-link-active' if request.endpoint == 'students.devices_page' else '' }}" href="{{ url_for('students.devices_page') }}">Devices</a>
+          <a href="{{ url_for('auth.logout') }}">Logout</a>
+        </nav>
+      </div>
+      {% endif %}
     </div>
-    {% if session.get('admin_authenticated') %}
-    <nav>
-      <a class="{{ 'nav-link-active' if request.endpoint == 'students.dashboard_home' else '' }}" href="{{ url_for('students.dashboard_home') }}">Dashboard</a>
-      <a class="{{ 'nav-link-active' if request.endpoint and request.endpoint.startswith('students.student') else '' }}" href="{{ url_for('students.students_list') }}">Students</a>
-      <a class="{{ 'nav-link-active' if request.endpoint and request.endpoint.startswith('sessions.') else '' }}" href="{{ url_for('sessions.sessions_list') }}">Sessions</a>
-      <a class="{{ 'nav-link-active' if request.endpoint and request.endpoint.startswith('attendance.') else '' }}" href="{{ url_for('attendance.attendance_records') }}">Attendance</a>
-      <a class="{{ 'nav-link-active' if request.endpoint == 'students.devices_page' else '' }}" href="{{ url_for('students.devices_page') }}">Devices</a>
-      <a href="{{ url_for('auth.logout') }}">Logout</a>
-    </nav>
-    {% endif %}
   </header>
 
-  <main class="page-shell">
+  <main class="page-shell{% if not session.get('admin_authenticated') %} page-shell-auth{% endif %}">
+    {% if request.endpoint in ['students.dashboard_home', 'attendance.attendance_records', 'students.devices_page'] %}
+    <div class="live-banner">Live refresh is enabled on this screen every 5 seconds when the page is idle.</div>
+    {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <section class="flash-stack">
