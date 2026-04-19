@@ -29,11 +29,15 @@
     <h2>Enrollment</h2>
     <p>Fingerprint template must be enrolled on the physical R307 sensor. Face data is stored only as backend embeddings plus the uploaded photo path.</p>
 
+    {% if not face_provider_available %}
+    <p class="warning-banner">Face enrollment is unavailable until the backend has the <code>face_recognition</code> dependency installed.</p>
+    {% endif %}
+
     <form method="post" action="{{ url_for('students.upload_face', student_id=student.id) }}" enctype="multipart/form-data" class="grid-form">
       <label>Face Image
-        <input type="file" name="face_image" accept="image/*" required>
+        <input type="file" name="face_image" accept="image/*" {% if not face_provider_available %}disabled{% else %}required{% endif %}>
       </label>
-      <button type="submit">Enroll Face</button>
+      <button type="submit" {% if not face_provider_available %}disabled{% endif %}>Enroll Face</button>
     </form>
 
     <hr>
@@ -46,7 +50,10 @@
           {% endfor %}
         </select>
       </label>
-      <button type="submit">Queue Fingerprint Enrollment</button>
+      {% if not devices %}
+      <p class="warning-banner">Add and activate at least one device before queueing fingerprint enrollment.</p>
+      {% endif %}
+      <button type="submit" {% if not devices %}disabled{% endif %}>Queue Fingerprint Enrollment</button>
     </form>
 
     <div class="meta-block">

@@ -46,7 +46,7 @@ def student_create():
         db.session.commit()
         flash("Student created.", "success")
         return redirect(url_for("students.student_edit", student_id=student.id))
-    return render_template("student_form.html", student=None)
+    return render_template("student_form.html", student=None, face_provider_available=face_provider_available())
 
 
 @students_bp.route("/students/<int:student_id>", methods=["GET", "POST"])
@@ -62,8 +62,13 @@ def student_edit(student_id: int):
         db.session.commit()
         flash("Student updated.", "success")
         return redirect(url_for("students.student_edit", student_id=student.id))
-    devices = Device.query.order_by(Device.display_name.asc()).all()
-    return render_template("student_form.html", student=student, devices=devices)
+    devices = Device.query.filter_by(is_active=True).order_by(Device.display_name.asc()).all()
+    return render_template(
+        "student_form.html",
+        student=student,
+        devices=devices,
+        face_provider_available=face_provider_available(),
+    )
 
 
 @students_bp.route("/students/<int:student_id>/upload-face", methods=["POST"])
@@ -87,7 +92,7 @@ def upload_face(student_id: int):
 def queue_fingerprint(student_id: int):
     student = Student.query.get_or_404(student_id)
     device_id = int(request.form["device_id"])
-    device = Device.query.get_or_404(device_id)
+    device = Device.query.filter_by(id=device_id, is_active=True).first_or_404()
     command = DeviceCommand(
         device=device,
         command_type="enroll_fingerprint",

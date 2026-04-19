@@ -5,18 +5,18 @@
   <h2>Create Session</h2>
   <form method="post" class="grid-form">
     <label>Session Title
-      <input type="text" name="title" required>
+      <input type="text" name="title" value="{{ request.form.get('title', '') }}" required>
     </label>
     <label>Class / Section
-      <input type="text" name="class_name" required>
+      <input type="text" name="class_name" value="{{ request.form.get('class_name', '') }}" required>
     </label>
     <label>Start Time
-      <input type="datetime-local" name="starts_at" required>
+      <input type="datetime-local" name="starts_at" value="{{ request.form.get('starts_at', '') }}" required>
     </label>
     <label>End Time
-      <input type="datetime-local" name="ends_at" required>
+      <input type="datetime-local" name="ends_at" value="{{ request.form.get('ends_at', '') }}" required>
     </label>
-    <label class="checkbox-line"><input type="checkbox" name="allow_duplicates"> Allow duplicate attendance</label>
+    <label class="checkbox-line"><input type="checkbox" name="allow_duplicates" {% if request.form.get('allow_duplicates') %}checked{% endif %}> Allow duplicate attendance</label>
     <button type="submit">Create Session</button>
   </form>
 </section>
