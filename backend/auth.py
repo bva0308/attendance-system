@@ -11,10 +11,15 @@ def verify_admin_credentials(username: str, password: str) -> bool:
     if username != cfg.admin_username:
         return False
 
-    if getattr(cfg, "admin_password", ""):
-        return password == cfg.admin_password
+    password_hash = getattr(cfg, "admin_password_hash", "")
+    if password_hash:
+        return check_password_hash(password_hash, password)
 
-    return check_password_hash(cfg.admin_password_hash, password)
+    plain_password = getattr(cfg, "admin_password", "")
+    if plain_password:
+        return password == plain_password
+
+    return False
 
 
 def is_github_login_enabled() -> bool:

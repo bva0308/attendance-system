@@ -1,6 +1,7 @@
 import csv
 import io
 from dataclasses import dataclass
+from datetime import datetime, time
 
 from sqlalchemy import and_
 
@@ -16,6 +17,17 @@ class AttendanceFilter:
     date_to: str | None = None
 
 
+def _parse_date_boundary(value: str | None, end_of_day: bool) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    boundary = time.max if end_of_day else time.min
+    return datetime.combine(parsed.date(), boundary)
+
+
 def query_attendance(filters: AttendanceFilter):
     query = AttendanceRecord.query.join(Student).join(Session).order_by(AttendanceRecord.created_at.desc())
 
@@ -26,10 +38,13 @@ def query_attendance(filters: AttendanceFilter):
         clauses.append(Student.id == filters.student_id)
     if filters.session_id:
         clauses.append(Session.id == filters.session_id)
-    if filters.date_from:
-        clauses.append(AttendanceRecord.created_at >= f"{filters.date_from} 00:00:00")
-    if filters.date_to:
-        clauses.append(AttendanceRecord.created_at <= f"{filters.date_to} 23:59:59")
+
+    date_from = _parse_date_boundary(filters.date_from, end_of_day=False)
+    date_to = _parse_date_boundary(filters.date_to, end_of_day=True)
+    if date_from:
+        clauses.append(AttendanceRecord.created_at >= date_from)
+    if date_to:
+        clauses.append(AttendanceRecord.created_at <= date_to)
 
     if clauses:
         query = query.filter(and_(*clauses))

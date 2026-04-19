@@ -28,12 +28,23 @@ def sessions_list():
 @login_required
 def session_create():
     if request.method == "POST":
+        try:
+            starts_at = datetime.fromisoformat(request.form["starts_at"])
+            ends_at = datetime.fromisoformat(request.form["ends_at"])
+        except ValueError:
+            flash("Start and end times must use valid date-time values.", "error")
+            return render_template("session_form.html")
+
+        if ends_at <= starts_at:
+            flash("End time must be later than the start time.", "error")
+            return render_template("session_form.html")
+
         session_token = secrets.token_urlsafe(18)
         session = Session(
             title=request.form["title"].strip(),
             class_name=request.form["class_name"].strip(),
-            starts_at=datetime.fromisoformat(request.form["starts_at"]),
-            ends_at=datetime.fromisoformat(request.form["ends_at"]),
+            starts_at=starts_at,
+            ends_at=ends_at,
             session_token=session_token,
             qr_payload=_build_payload(session_token),
             allow_duplicates=request.form.get("allow_duplicates") == "on",
