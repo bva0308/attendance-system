@@ -51,6 +51,20 @@ class AttendanceStateMachine:
     def last_message(self):
         return self.message
 
+    def _reset_verification_context(self):
+        self.verified_session = SessionInfo()
+        self.matched_student = StudentInfo()
+
+    def _is_verification_state(self):
+        return self.state in (
+            DeviceState.CAPTURE_FACE,
+            DeviceState.VERIFY_FACE,
+            DeviceState.WAIT_FINGER,
+            DeviceState.VERIFY_FINGER,
+            DeviceState.MARK_SUCCESS,
+            DeviceState.MARK_FAIL,
+        )
+
     def transition(self, next_state, next_message):
         previous_state = self.state
         if previous_state == next_state and self.message == next_message:
@@ -90,7 +104,25 @@ class AttendanceStateMachine:
         self.check_commands()
 
         if not self.wifi.is_connected() and self.state != DeviceState.ERROR_RECOVERY:
+            self._reset_verification_context()
             self.transition(DeviceState.ERROR_RECOVERY, "wifi disconnected")
+            return
+
+        if (
+            self.state not in (DeviceState.IDLE, DeviceState.WAIT_QR, DeviceState.ERROR_RECOVERY)
+            and ticks_diff(monotonic_ms(), self.state_started_at) >= DeviceConfig.STATE_TIMEOUT_MS
+        ):
+            self.transition(DeviceState.MARK_FAIL, "state timeout")
+            return
+
+        if self._is_verification_state() and self.verified_session.valid:
+            if not self.active_session.valid or self.active_session.token != self.verified_session.token:
+                self._reset_verification_context()
+                self.transition(
+                    DeviceState.WAIT_QR if self.active_session.valid else DeviceState.IDLE,
+                    "active session changed",
+                )
+                return
 
         if self.state == DeviceState.IDLE:
             if self.active_session.valid:
@@ -154,8 +186,7 @@ class AttendanceStateMachine:
             if mark_result.ok:
                 self.relay.pulse(DeviceConfig.RELAY_PULSE_MS)
                 self.active_session = self.verified_session
-                self.verified_session = SessionInfo()
-                self.matched_student = StudentInfo()
+                self._reset_verification_context()
                 self.transition(DeviceState.WAIT_QR, "attendance marked successfully")
             else:
                 self.transition(DeviceState.MARK_FAIL, mark_result.message)
@@ -163,8 +194,7 @@ class AttendanceStateMachine:
 
         if self.state == DeviceState.MARK_FAIL:
             sleep_ms(1200)
-            self.verified_session = SessionInfo()
-            self.matched_student = StudentInfo()
+            self._reset_verification_context()
             self.transition(
                 DeviceState.WAIT_QR if self.active_session.valid else DeviceState.IDLE,
                 "ready for next attempt",

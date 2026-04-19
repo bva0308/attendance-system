@@ -11,6 +11,7 @@ The prototype is intentionally split so the ESP32-CAM only does what it can do r
 
 - ESP32-CAM handles Wi-Fi, camera capture, workflow state machine, fingerprint enrollment/matching through R307, relay output, and backend communication.
 - Backend handles QR decoding, face verification, admin login, attendance storage, sessions, reports, and dashboard pages.
+- The firmware directory in this repo is a Python port that mirrors the embedded workflow for development and review. The earlier Arduino/C++ sketch layout shown in older notes is no longer the source of truth here.
 
 ## Feasibility Summary
 
@@ -45,23 +46,19 @@ attendance-system/
     services_reports.py
   firmware/
     esp32_cam_attendance/
-      api_client.cpp
-      api_client.h
-      camera_service.cpp
-      camera_service.h
-      config.example.h
-      esp32_cam_attendance.ino
-      fingerprint_service.cpp
-      fingerprint_service.h
-      pins.h
-      qr_service.cpp
-      qr_service.h
-      relay_service.cpp
-      relay_service.h
-      state_machine.cpp
-      state_machine.h
-      storage_service.cpp
-      storage_service.h
+      __init__.py
+      api_client.py
+      camera_service.py
+      config.py
+      fingerprint_service.py
+      main.py
+      models.py
+      pins.py
+      qr_service.py
+      relay_service.py
+      runtime.py
+      state_machine.py
+      storage_service.py
   web/
     static/
       css/styles.css
@@ -112,18 +109,10 @@ Backend:
 
 Firmware:
 
-- Arduino IDE 2.x
-- ESP32 board package: `esp32 by Espressif Systems 2.0.17`
-- Board profile: `AI Thinker ESP32-CAM`
-- PSRAM: enabled
-- Partition scheme: `Huge APP`
-- Upload speed: `115200`
-
-Arduino libraries:
-
-- `ArduinoJson` 6.21.x
-- `Adafruit Fingerprint Sensor Library` 2.1.x
-- `WiFi`, `HTTPClient`, `WebServer`, `Preferences`, `esp_camera` from ESP32 core
+- Repo implementation: Python modules under `firmware/esp32_cam_attendance/`
+- Hardware target: ESP32-CAM AI Thinker + R307
+- Runtime model: Wi-Fi client, backend API client, camera capture wrapper, fingerprint service, relay service, and state machine
+- Local development: the Python port can be reviewed and smoke-tested on desktop even when the physical device is unavailable
 
 Python dependencies are pinned in [backend/requirements.txt](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/backend/requirements.txt).
 
@@ -185,15 +174,12 @@ You should replace the admin hash before presentation use.
 
 ## Firmware Setup
 
-1. Open [esp32_cam_attendance.ino](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/esp32_cam_attendance/esp32_cam_attendance.ino) in Arduino IDE.
-2. Copy [config.example.h](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/esp32_cam_attendance/config.example.h) to `config.h`.
-3. Fill in Wi-Fi SSID, password, backend base URL, device ID, and device API key.
-4. Set board to `AI Thinker ESP32-CAM`.
-5. Enable PSRAM.
-6. Choose `Huge APP` partition scheme.
-7. Upload using the normal ESP32-CAM serial upload method.
+1. Open [config.py](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/esp32_cam_attendance/config.py) and set Wi-Fi SSID, password, backend base URL, device ID, and device API key for your environment.
+2. Review [main.py](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/esp32_cam_attendance/main.py) and [state_machine.py](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/esp32_cam_attendance/state_machine.py) as the firmware entrypoint and sequential verification flow.
+3. Match the configured `DEVICE_ID` and `DEVICE_API_KEY` with a registered backend device record.
+4. Deploy the equivalent logic to the ESP32-CAM environment you are using for presentation or hardware integration.
 
-## ESP32-CAM Upload Instructions
+## ESP32-CAM Wiring Notes
 
 1. Connect USB-to-TTL adapter:
    - `U0R` to adapter `TX`
@@ -202,9 +188,8 @@ You should replace the admin hash before presentation use.
    - `5V` to stable `5V`
 2. Pull `GPIO0` to `GND` for flashing.
 3. Press reset or power cycle the board.
-4. Upload from Arduino IDE.
-5. Remove `GPIO0` from `GND`.
-6. Press reset again to boot the sketch.
+4. After flashing your target firmware build, remove `GPIO0` from `GND`.
+5. Press reset again to boot the device.
 
 This firmware intentionally does not use pins `1` and `3` for the fingerprint sensor, so upload/debug remains separate from the R307 UART link.
 
@@ -222,7 +207,7 @@ This firmware intentionally does not use pins `1` and `3` for the fingerprint se
 
 ## Security Notes
 
-- Admin password is hashed using Werkzeug password hashing.
+- Admin password verification prefers Werkzeug password hashes and only falls back to a plain-text password if no hash is configured.
 - Device authentication uses `X-Device-Id` and `X-Device-Key`.
 - Local development can run over HTTP.
 - Production deployment should place Flask behind HTTPS or a reverse proxy.
