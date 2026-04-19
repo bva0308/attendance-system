@@ -27,6 +27,11 @@ def _serialize_session(session: Session | None):
     }
 
 
+def _session_is_open(session: Session) -> bool:
+    now = datetime.utcnow()
+    return session.is_active and session.starts_at <= now <= session.ends_at
+
+
 @device_bp.route("/heartbeat", methods=["POST"])
 @device_required
 def heartbeat():
@@ -57,6 +62,10 @@ def next_command():
     )
     if not command:
         return jsonify({"ok": True, "command": None})
+
+    command.status = "in_progress"
+    db.session.commit()
+
     return jsonify(
         {
             "ok": True,
@@ -73,14 +82,16 @@ def next_command():
 @device_required
 def complete_command(command_id: int):
     command = DeviceCommand.query.filter_by(id=command_id, device_id=request.device.id).first_or_404()
-    payload = request.get_json(force=True)
+    payload = request.get_json(force=True, silent=True) or {}
     command.status = payload.get("status", "completed")
     command.completed_at = datetime.utcnow()
 
     if command.command_type == "enroll_fingerprint" and command.status == "completed":
         command_payload = json.loads(command.payload_json)
         student = Student.query.get(command_payload["student_id"])
-        template_id = int(payload["template_id"])
+        template_id = int(payload.get("template_id") or 0)
+        if student is None or template_id <= 0:
+            return jsonify({"ok": False, "error": "valid student and template_id are required"}), 400
         if student.fingerprint_profile:
             student.fingerprint_profile.template_id = template_id
         else:
@@ -102,8 +113,7 @@ def verify_qr():
     if not session:
         return jsonify({"ok": False, "error": "invalid or inactive session QR"}), 400
 
-    now = datetime.utcnow()
-    if session.starts_at > now or session.ends_at < now:
+    if not _session_is_open(session):
         return jsonify({"ok": False, "error": "session is outside its active time window"}), 400
 
     return jsonify({"ok": True, "session": _serialize_session(session)})
@@ -144,8 +154,13 @@ def mark_attendance():
     session = Session.query.filter_by(session_token=payload["session_token"]).first_or_404()
     student = Student.query.get_or_404(int(payload["student_id"]))
 
+    if not _session_is_open(session):
+        return jsonify({"ok": False, "error": "session is not currently accepting attendance"}), 409
+
     if student.class_name != session.class_name:
         return jsonify({"ok": False, "error": "student is not assigned to this class"}), 400
+    if not student.active:
+        return jsonify({"ok": False, "error": "student is inactive"}), 409
 
     duplicate = AttendanceRecord.query.filter_by(student_id=student.id, session_id=session.id, status="present").first()
     if duplicate and not session.allow_duplicates:
