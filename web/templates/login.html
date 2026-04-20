@@ -2,19 +2,43 @@
 {% block title %}Login{% endblock %}
 {% block content %}
 <section class="card auth-card">
-  <h2>Admin Login</h2>
+  <div class="auth-header">
+    <span class="page-kicker">Admin Access</span>
+    <h2 class="page-title">Sign in to the attendance console</h2>
+    <p class="page-copy">Use the admin account to manage students, sessions, devices, and verification history from one restrained operational view.</p>
+  </div>
+  <section class="summary-grid">
+    <div class="summary-tile">
+      <span class="summary-label">Students</span>
+      <strong class="summary-value">Enrollment control</strong>
+    </div>
+    <div class="summary-tile">
+      <span class="summary-label">Sessions</span>
+      <strong class="summary-value">Live attendance windows</strong>
+    </div>
+    <div class="summary-tile">
+      <span class="summary-label">Devices</span>
+      <strong class="summary-value">Heartbeat and command tracking</strong>
+    </div>
+  </section>
+  <section class="panel-section">
   {% if cfg.github_client_id %}
-  <a class="button-link oauth-button" href="{{ url_for('auth.login_github') }}">Continue with GitHub</a>
+  <a class="button-link button-link-block oauth-button" href="{{ url_for('auth.login_github') }}">Continue with GitHub</a>
   <p class="auth-divider"><span>or use your admin password</span></p>
   {% endif %}
   <form method="post" class="grid-form">
-    <label>Username
+    <label class="field-group">
+      <span class="field-label">Username</span>
       <input type="text" name="username" value="{{ request.form.get('username', cfg.admin_username) }}" required>
     </label>
-    <label>Password
+    <label class="field-group">
+      <span class="field-label">Password</span>
       <input type="password" name="password" placeholder="Enter admin password" required>
     </label>
-    <button type="submit">Login</button>
+    <div class="action-row field-span-full">
+      <button type="submit">Login</button>
+    </div>
   </form>
+  </section>
 </section>
 {% endblock %}
