@@ -28,7 +28,7 @@
               {{ 'Enabled' if device.is_active else 'Disabled' }}
             </span>
           </td>
-          <td>{{ device.last_seen_at.strftime('%Y-%m-%d %H:%M:%S') if device.last_seen_at else 'never' }}</td>
+          <td>{{ device.last_seen_at|datetime_display }}</td>
           <td>{{ device.ip_address or '-' }}</td>
         </tr>
         {% else %}
@@ -52,7 +52,7 @@
       <tbody>
         {% for command in queued_commands %}
         <tr>
-          <td>{{ command.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td>{{ command.created_at|datetime_display }}</td>
           <td>{{ command.device.display_name }}</td>
           <td>{{ command.command_type }}</td>
           <td>
