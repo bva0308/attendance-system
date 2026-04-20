@@ -24,7 +24,7 @@
       <tbody>
         {% for row in recent_attendance %}
         <tr>
-          <td>{{ row.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td>{{ row.created_at|datetime_display }}</td>
           <td>{{ row.student.full_name }}</td>
           <td>{{ row.session.title }}</td>
           <td>
@@ -61,7 +61,7 @@
               {{ (device.last_status or 'unknown')|replace('_', ' ')|title }}
             </span>
           </td>
-          <td>{{ device.last_seen_at.strftime('%Y-%m-%d %H:%M:%S') if device.last_seen_at else 'never' }}</td>
+          <td>{{ device.last_seen_at|datetime_display }}</td>
           <td>{{ device.last_rssi if device.last_rssi is not none else '-' }}</td>
         </tr>
         {% else %}
