@@ -3,29 +3,48 @@
 {% block content %}
 <section class="two-col">
   <article class="card">
-    <h2>Registered Devices</h2>
+    <div class="section-head section-head--stack">
+      <div>
+        <h2>Registered Devices</h2>
+        <p class="section-copy">Device connectivity, health, and activation are tracked by the backend heartbeat fields shown below.</p>
+      </div>
+    </div>
     <table>
       <thead>
-        <tr><th>Name</th><th>Device ID</th><th>Status</th><th>Last Seen</th><th>IP</th></tr>
+        <tr><th>Name</th><th>Device ID</th><th>Heartbeat</th><th>Enabled</th><th>Last Seen</th><th>IP</th></tr>
       </thead>
       <tbody>
         {% for device in devices %}
         <tr>
           <td>{{ device.display_name }}</td>
           <td>{{ device.device_id }}</td>
-          <td>{{ device.last_status or 'unknown' }}</td>
+          <td>
+            <span class="status-pill {{ 'status-pill-active' if device.last_status in ['ready', 'idle', 'scanning'] else 'status-pill-outline' }}">
+              {{ (device.last_status or 'unknown')|replace('_', ' ')|title }}
+            </span>
+          </td>
+          <td>
+            <span class="status-pill {{ 'status-pill-active' if device.is_active else 'status-pill-muted' }}">
+              {{ 'Enabled' if device.is_active else 'Disabled' }}
+            </span>
+          </td>
           <td>{{ device.last_seen_at.strftime('%Y-%m-%d %H:%M:%S') if device.last_seen_at else 'never' }}</td>
           <td>{{ device.ip_address or '-' }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="5">No devices registered.</td></tr>
+        <tr><td colspan="6">No devices registered.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </article>
 
   <article class="card">
-    <h2>Queued / Recent Commands</h2>
+    <div class="section-head section-head--stack">
+      <div>
+        <h2>Queued / Recent Commands</h2>
+        <p class="section-copy">Recent command activity helps verify that enrollment and device actions are flowing through the queue.</p>
+      </div>
+    </div>
     <table>
       <thead>
         <tr><th>Created</th><th>Device</th><th>Type</th><th>Status</th></tr>
@@ -36,7 +55,11 @@
           <td>{{ command.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
           <td>{{ command.device.display_name }}</td>
           <td>{{ command.command_type }}</td>
-          <td>{{ command.status }}</td>
+          <td>
+            <span class="status-pill {{ 'status-pill-active' if command.status == 'completed' else 'status-pill-outline' }}">
+              {{ command.status|replace('_', ' ')|title }}
+            </span>
+          </td>
         </tr>
         {% else %}
         <tr><td colspan="4">No commands queued.</td></tr>
