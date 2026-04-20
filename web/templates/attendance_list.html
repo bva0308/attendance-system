@@ -3,11 +3,14 @@
 {% block content %}
 <section class="card">
   <div class="section-head">
-    <h2>Attendance Records</h2>
+    <div>
+      <h2>Attendance Records</h2>
+      <p class="section-copy">Filter by class / section, student, session, or date range to match the same backend reporting criteria used for exports.</p>
+    </div>
     <a class="button-link" href="{{ url_for('attendance.attendance_export', class_name=filters.class_name, student_id=filters.student_id, session_id=filters.session_id, date_from=filters.date_from, date_to=filters.date_to) }}">Export CSV</a>
   </div>
   <form method="get" class="filter-grid">
-    <label>Class
+    <label>Class / Section
       <input type="text" name="class_name" value="{{ filters.class_name or '' }}">
     </label>
     <label>Student
@@ -37,7 +40,7 @@
 
   <table>
     <thead>
-      <tr><th>Timestamp</th><th>Student</th><th>Class</th><th>Session</th><th>Verification</th><th>Note</th></tr>
+      <tr><th>Timestamp</th><th>Student</th><th>Class / Section</th><th>Session</th><th>Status</th><th>Verification</th><th>Note</th></tr>
     </thead>
     <tbody>
       {% for row in records %}
@@ -46,11 +49,22 @@
         <td>{{ row.student.full_name }}</td>
         <td>{{ row.student.class_name }}</td>
         <td>{{ row.session.title }}</td>
-        <td>QR={{ row.verified_by_qr }}, Face={{ row.verified_by_face }}, Finger={{ row.verified_by_fingerprint }}</td>
+        <td>
+          <span class="status-pill {{ 'status-pill-active' if row.status == 'present' else 'status-pill-outline' }}">
+            {{ row.status|replace('_', ' ')|title }}
+          </span>
+        </td>
+        <td>
+          {% set methods = [] %}
+          {% if row.verified_by_qr %}{% set _ = methods.append('QR') %}{% endif %}
+          {% if row.verified_by_face %}{% set _ = methods.append('Face') %}{% endif %}
+          {% if row.verified_by_fingerprint %}{% set _ = methods.append('Fingerprint') %}{% endif %}
+          {{ methods|join(', ') if methods else 'Manual / Unknown' }}
+        </td>
         <td>{{ row.note or '-' }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="6">No records found.</td></tr>
+      <tr><td colspan="7">No records found.</td></tr>
       {% endfor %}
     </tbody>
   </table>
