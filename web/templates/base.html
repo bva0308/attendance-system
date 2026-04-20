@@ -15,11 +15,11 @@
     </div>
     {% if session.get('admin_authenticated') %}
     <nav>
-      <a href="{{ url_for('students.dashboard_home') }}">Dashboard</a>
-      <a href="{{ url_for('students.students_list') }}">Students</a>
-      <a href="{{ url_for('sessions.sessions_list') }}">Sessions</a>
-      <a href="{{ url_for('attendance.attendance_records') }}">Attendance</a>
-      <a href="{{ url_for('students.devices_page') }}">Devices</a>
+      <a class="{{ 'nav-link-active' if request.endpoint == 'students.dashboard_home' else '' }}" href="{{ url_for('students.dashboard_home') }}">Dashboard</a>
+      <a class="{{ 'nav-link-active' if request.endpoint and request.endpoint.startswith('students.student') else '' }}" href="{{ url_for('students.students_list') }}">Students</a>
+      <a class="{{ 'nav-link-active' if request.endpoint and request.endpoint.startswith('sessions.') else '' }}" href="{{ url_for('sessions.sessions_list') }}">Sessions</a>
+      <a class="{{ 'nav-link-active' if request.endpoint and request.endpoint.startswith('attendance.') else '' }}" href="{{ url_for('attendance.attendance_records') }}">Attendance</a>
+      <a class="{{ 'nav-link-active' if request.endpoint == 'students.devices_page' else '' }}" href="{{ url_for('students.devices_page') }}">Devices</a>
       <a href="{{ url_for('auth.logout') }}">Logout</a>
     </nav>
     {% endif %}
