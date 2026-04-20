@@ -1,8 +1,23 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
+<section class="page-header">
+  <div class="page-header__content">
+    <span class="page-kicker">System Message</span>
+    <h2 class="page-title">{{ title }}</h2>
+    <p class="page-copy">The request could not be completed from the current route.</p>
+  </div>
+</section>
+
 <section class="card">
-  <h2>{{ title }}</h2>
-  <p>{{ message }}</p>
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">{{ title }}</h3>
+      <p class="card-subtitle">{{ message }}</p>
+    </div>
+  </div>
+  <div class="action-row">
+    <a class="button-link button-link-secondary" href="{{ url_for('students.dashboard_home') if session.get('admin_authenticated') else url_for('auth.login') }}">Return</a>
+  </div>
 </section>
 {% endblock %}
