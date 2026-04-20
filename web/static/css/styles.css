@@ -138,6 +138,16 @@ td {
   margin-bottom: 1rem;
 }
 
+.section-head--stack {
+  align-items: flex-start;
+}
+
+.section-copy {
+  margin: 0.35rem 0 0;
+  color: #556068;
+  max-width: 60ch;
+}
+
 .grid-form,
 .filter-grid {
   display: grid;
@@ -188,6 +198,39 @@ td {
   padding: 0.85rem;
   border-radius: 12px;
   background: #fff7cc;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-pill-active {
+  background: #dcfce7;
+  color: var(--success);
+}
+
+.status-pill-muted {
+  background: #e5e7eb;
+  color: #475569;
+}
+
+.status-pill-outline {
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: transparent;
+}
+
+.status-pill-warn {
+  background: #fff7cc;
+  color: #8a5a00;
 }
 
 .qr-thumb {
@@ -245,5 +288,9 @@ td {
 
   .page-shell {
     padding: 1rem;
+  }
+
+  .status-pill {
+    white-space: normal;
   }
 }

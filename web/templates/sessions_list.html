@@ -8,7 +8,7 @@
   </div>
   <table>
     <thead>
-      <tr><th>Title</th><th>Class</th><th>Window</th><th>Active</th><th>QR</th><th>Actions</th></tr>
+      <tr><th>Title</th><th>Class / Section</th><th>Window</th><th>Attendance Policy</th><th>Status</th><th>QR</th><th>Actions</th></tr>
     </thead>
     <tbody>
       {% for item in sessions %}
@@ -16,7 +16,16 @@
         <td>{{ item.title }}</td>
         <td>{{ item.class_name }}</td>
         <td>{{ item.starts_at.strftime('%Y-%m-%d %H:%M') }} to {{ item.ends_at.strftime('%Y-%m-%d %H:%M') }}</td>
-        <td>{{ 'Yes' if item.is_active else 'No' }}</td>
+        <td>
+          <span class="status-pill {{ 'status-pill-warn' if item.allow_duplicates else 'status-pill-outline' }}">
+            {{ 'Duplicates Allowed' if item.allow_duplicates else 'Single Attendance' }}
+          </span>
+        </td>
+        <td>
+          <span class="status-pill {{ 'status-pill-active' if item.is_active else 'status-pill-muted' }}">
+            {{ 'Active' if item.is_active else 'Inactive' }}
+          </span>
+        </td>
         <td><img class="qr-thumb" src="{{ url_for('sessions.session_qr_png', session_id=item.id) }}" alt="Session QR"></td>
         <td>
           {% if item.is_active %}
@@ -27,7 +36,7 @@
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="6">No sessions yet.</td></tr>
+      <tr><td colspan="7">No sessions yet.</td></tr>
       {% endfor %}
     </tbody>
   </table>

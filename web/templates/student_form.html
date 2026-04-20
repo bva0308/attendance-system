@@ -3,22 +3,32 @@
 {% block content %}
 <section class="two-col">
   <article class="card">
-    <h2>{{ 'Edit Student' if student else 'Create Student' }}</h2>
+    <div class="section-head section-head--stack">
+      <div>
+        <h2>{{ 'Edit Student' if student else 'Create Student' }}</h2>
+        <p class="section-copy">Use the same class / section naming that your session setup uses so attendance filters stay consistent.</p>
+      </div>
+      {% if student %}
+      <span class="status-pill {{ 'status-pill-active' if form_data.active else 'status-pill-muted' }}">
+        {{ 'Active' if form_data.active else 'Inactive' }}
+      </span>
+      {% endif %}
+    </div>
     <form method="post" class="grid-form">
       <label>Student Code
-        <input type="text" name="student_code" value="{{ student.student_code if student else '' }}" required>
+        <input type="text" name="student_code" value="{{ form_data.student_code }}" required>
       </label>
       <label>Full Name
-        <input type="text" name="full_name" value="{{ student.full_name if student else '' }}" required>
+        <input type="text" name="full_name" value="{{ form_data.full_name }}" required>
       </label>
       <label>Email
-        <input type="email" name="email" value="{{ student.email if student else '' }}">
+        <input type="email" name="email" value="{{ form_data.email }}">
       </label>
       <label>Class / Section
-        <input type="text" name="class_name" value="{{ student.class_name if student else '' }}" required>
+        <input type="text" name="class_name" value="{{ form_data.class_name }}" required>
       </label>
       {% if student %}
-      <label class="checkbox-line"><input type="checkbox" name="active" {% if student.active %}checked{% endif %}> Active</label>
+      <label class="checkbox-line"><input type="checkbox" name="active" {% if form_data.active %}checked{% endif %}> Active</label>
       {% endif %}
       <button type="submit">{{ 'Save Changes' if student else 'Create Student' }}</button>
     </form>
@@ -26,8 +36,13 @@
 
   {% if student %}
   <article class="card">
-    <h2>Enrollment</h2>
-    <p>Fingerprint template must be enrolled on the physical R307 sensor. Face data is stored only as backend embeddings plus the uploaded photo path.</p>
+    <div class="section-head section-head--stack">
+      <div>
+        <h2>Enrollment</h2>
+        <p class="section-copy">Fingerprint templates are enrolled on the physical R307 sensor. Face data is stored as backend embeddings plus the uploaded image path.</p>
+      </div>
+      <span class="status-pill status-pill-outline">{{ student.student_code }}</span>
+    </div>
 
     {% if not face_provider_available %}
     <p class="warning-banner">Face enrollment is unavailable until the backend has the <code>face_recognition</code> dependency installed.</p>
