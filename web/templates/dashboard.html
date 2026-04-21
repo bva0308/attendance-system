@@ -1,74 +1,111 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<section class="metric-grid">
-  <article class="metric-card"><span>{{ metrics.students }}</span><strong>Students</strong></article>
-  <article class="metric-card"><span>{{ metrics.active_sessions }}</span><strong>Active Sessions</strong></article>
-  <article class="metric-card"><span>{{ metrics.attendance_records }}</span><strong>Attendance Records</strong></article>
-  <article class="metric-card"><span>{{ metrics.devices }}</span><strong>Devices</strong></article>
+<section class="page-header">
+  <div class="page-header__content">
+    <span class="page-kicker">Dashboard</span>
+    <h2 class="page-title">Daily attendance operations</h2>
+    <p class="page-copy">Monitor enrollment readiness, session activity, and device health from one place without digging through device logs.</p>
+  </div>
+  <div class="page-actions">
+    <a class="button-link button-link-secondary" href="{{ url_for('attendance.attendance_records') }}">Review attendance</a>
+    <a class="button-link" href="{{ url_for('sessions.session_create') }}">Create session</a>
+  </div>
 </section>
 
-<section class="two-col">
+<section class="metric-grid">
+  <article class="metric-card">
+    <span class="metric-label">Students Registered</span>
+    <strong class="metric-value">{{ metrics.students }}</strong>
+    <p class="metric-copy">Roster records available for enrollment and verification.</p>
+  </article>
+  <article class="metric-card">
+    <span class="metric-label">Live Sessions</span>
+    <strong class="metric-value">{{ metrics.active_sessions }}</strong>
+    <p class="metric-copy">Sessions currently open for check-in and attendance capture.</p>
+  </article>
+  <article class="metric-card">
+    <span class="metric-label">Attendance Logs</span>
+    <strong class="metric-value">{{ metrics.attendance_records }}</strong>
+    <p class="metric-copy">Recorded outcomes from successful and rejected verification attempts.</p>
+  </article>
+  <article class="metric-card">
+    <span class="metric-label">Devices</span>
+    <strong class="metric-value">{{ metrics.devices }}</strong>
+    <p class="metric-copy">Registered ESP32 units tracked by the backend heartbeat feed.</p>
+  </article>
+</section>
+
+<section class="layout-grid">
   <article class="card">
-    <div class="section-head">
+    <div class="card-header">
       <div>
-        <h2>Recent Attendance</h2>
-        <p class="section-copy">The latest attendance events use the same attendance status values that appear in the full report export.</p>
+        <h3 class="card-title">Recent attendance</h3>
+        <p class="card-subtitle">Every completed fingerprint-stage attempt appears here in {{ display_timezone }}, including successful marks and rejections.</p>
       </div>
-      <a href="{{ url_for('attendance.attendance_records') }}">View all</a>
+      <a href="{{ url_for('attendance.attendance_records') }}">View full log</a>
     </div>
-    <table>
-      <thead>
-        <tr><th>Time</th><th>Student</th><th>Session</th><th>Status</th></tr>
-      </thead>
-      <tbody>
-        {% for row in recent_attendance %}
-        <tr>
-          <td>{{ row.created_at|datetime_display }}</td>
-          <td>{{ row.student.full_name }}</td>
-          <td>{{ row.session.title }}</td>
-          <td>
-            <span class="status-pill {{ 'status-pill-active' if row.status == 'present' else 'status-pill-outline' }}">
-              {{ row.status|replace('_', ' ')|title }}
-            </span>
-          </td>
-        </tr>
-        {% else %}
-        <tr><td colspan="4">No attendance yet.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Nepal Time</th><th>Student</th><th>Session</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for row in recent_attendance %}
+          <tr>
+            <td>{{ row.created_at|datetime_display }}</td>
+            <td>
+              <div class="table-title">{{ row.student_name }}</div>
+            </td>
+            <td>{{ row.session_title }}</td>
+            <td>
+              <span class="status-pill {{ 'status-pill-active' if row.status == 'present' else 'status-pill-danger' if row.status == 'rejected' else 'status-pill-outline' }}">
+                {{ row.status|replace('_', ' ')|title }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="muted-copy">No attendance has been logged yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </article>
 
   <article class="card">
-    <div class="section-head">
+    <div class="card-header">
       <div>
-        <h2>Device Health</h2>
-        <p class="section-copy">Heartbeat status and signal strength come from the last device sync stored by the backend.</p>
+        <h3 class="card-title">Device health</h3>
+        <p class="card-subtitle">Heartbeat status and signal strength come from the last device sync stored by the backend. Timestamps are shown in {{ display_timezone }}.</p>
       </div>
       <a href="{{ url_for('students.devices_page') }}">Manage devices</a>
     </div>
-    <table>
-      <thead>
-        <tr><th>Device</th><th>Last State</th><th>Last Seen</th><th>RSSI</th></tr>
-      </thead>
-      <tbody>
-        {% for device in devices %}
-        <tr>
-          <td>{{ device.display_name }}</td>
-          <td>
-            <span class="status-pill {{ 'status-pill-active' if device.last_status in ['ready', 'idle', 'scanning'] else 'status-pill-outline' }}">
-              {{ (device.last_status or 'unknown')|replace('_', ' ')|title }}
-            </span>
-          </td>
-          <td>{{ device.last_seen_at|datetime_display }}</td>
-          <td>{{ device.last_rssi if device.last_rssi is not none else '-' }}</td>
-        </tr>
-        {% else %}
-        <tr><td colspan="4">No registered devices yet.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Device</th><th>Last State</th><th>Last Seen (NPT)</th><th>RSSI</th></tr>
+        </thead>
+        <tbody>
+          {% for device in devices %}
+          <tr>
+            <td>
+              <div class="table-title">{{ device.display_name }}</div>
+              <div class="table-subtext mono">{{ device.device_id }}</div>
+            </td>
+            <td>
+              <span class="status-pill {{ 'status-pill-active' if device.last_status in ['ready', 'idle', 'scanning'] else 'status-pill-outline' }}">
+                {{ (device.last_status or 'unknown')|replace('_', ' ')|title }}
+              </span>
+            </td>
+            <td>{{ device.last_seen_at|datetime_display }}</td>
+            <td>{{ device.last_rssi if device.last_rssi is not none else '-' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="muted-copy">No registered devices yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </article>
 </section>
 {% endblock %}
