@@ -1,37 +1,66 @@
 {% extends "base.html" %}
 {% block title %}Students{% endblock %}
 {% block content %}
-<section class="card">
-  <div class="section-head">
-    <h2>Students</h2>
-    <a class="button-link" href="{{ url_for('students.student_create') }}">Add Student</a>
+<section class="page-header">
+  <div class="page-header__content">
+    <span class="page-kicker">Students</span>
+    <h2 class="page-title">Enrollment roster</h2>
+    <p class="page-copy">Keep student records aligned with class naming, then complete fingerprint and face enrollment from a single record view.</p>
   </div>
-  {% if not face_provider_available %}
-  <p class="warning-banner">Face enrollment is disabled because the <code>face_recognition</code> dependency is not installed.</p>
-  {% endif %}
-  <table>
-    <thead>
-      <tr><th>Code</th><th>Name</th><th>Class / Section</th><th>Status</th><th>Face Profiles</th><th>Fingerprint</th><th></th></tr>
-    </thead>
-    <tbody>
-      {% for student in students %}
-      <tr>
-        <td>{{ student.student_code }}</td>
-        <td>{{ student.full_name }}</td>
-        <td>{{ student.class_name }}</td>
-        <td>
-          <span class="status-pill {{ 'status-pill-active' if student.active else 'status-pill-muted' }}">
-            {{ 'Active' if student.active else 'Inactive' }}
-          </span>
-        </td>
-        <td>{{ student.face_profiles|length }}</td>
-        <td>{{ student.fingerprint_profile.template_id if student.fingerprint_profile else 'Not enrolled' }}</td>
-        <td><a href="{{ url_for('students.student_edit', student_id=student.id) }}">Open</a></td>
-      </tr>
-      {% else %}
-      <tr><td colspan="7">No students yet.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="page-actions">
+    <a class="button-link button-link-secondary" href="{{ url_for('students.dashboard_home') }}">Back to dashboard</a>
+    <a class="button-link" href="{{ url_for('students.student_create') }}">Add student</a>
+  </div>
+</section>
+
+{% if not face_provider_available %}
+<p class="warning-banner">Face enrollment is disabled because the <code>face_recognition</code> dependency is not installed.</p>
+{% endif %}
+
+<section class="card">
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">Student records</h3>
+      <p class="card-subtitle">Open any student to enroll face data, queue fingerprint registration, and confirm whether the record is ready for attendance.</p>
+    </div>
+    <span class="status-pill status-pill-outline">{{ students|length }} total</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Code</th><th>Student</th><th>Class / Section</th><th>Enrollment</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td><span class="mono">{{ student.student_code }}</span></td>
+          <td>
+            <div class="table-title">{{ student.full_name }}</div>
+            {% if student.email %}
+            <div class="table-subtext">{{ student.email }}</div>
+            {% endif %}
+          </td>
+          <td>{{ student.class_name }}</td>
+          <td>
+            <div class="table-meta">
+              <span>Face profiles: {{ student.face_profiles|length }}</span>
+              <span>{{ ('Fingerprint template #' ~ student.fingerprint_profile.template_id) if student.fingerprint_profile else 'Fingerprint not enrolled' }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="status-pill {{ 'status-pill-active' if student.active else 'status-pill-muted' }}">
+              {{ 'Active' if student.active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="table-action">
+            <a class="button-link button-link-secondary button-link-compact" href="{{ url_for('students.student_edit', student_id=student.id) }}">Open record</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="muted-copy">No students have been added yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 {% endblock %}

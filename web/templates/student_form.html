@@ -1,12 +1,23 @@
 {% extends "base.html" %}
 {% block title %}{{ 'Edit Student' if student else 'New Student' }}{% endblock %}
 {% block content %}
-<section class="two-col">
+<section class="page-header">
+  <div class="page-header__content">
+    <span class="page-kicker">Student Record</span>
+    <h2 class="page-title">{{ 'Edit ' ~ student.full_name if student else 'Create a new student' }}</h2>
+    <p class="page-copy">Use the same class and section naming as your session setup so filtering, matching, and attendance review stay consistent.</p>
+  </div>
+  <div class="page-actions">
+    <a class="button-link button-link-secondary" href="{{ url_for('students.students_list') }}">Back to students</a>
+  </div>
+</section>
+
+<section class="layout-grid">
   <article class="card">
-    <div class="section-head section-head--stack">
+    <div class="card-header">
       <div>
-        <h2>{{ 'Edit Student' if student else 'Create Student' }}</h2>
-        <p class="section-copy">Use the same class / section naming that your session setup uses so attendance filters stay consistent.</p>
+        <h3 class="card-title">{{ 'Student details' if student else 'Create student' }}</h3>
+        <p class="card-subtitle">Keep the record precise here first, then complete device-side enrollment after the student exists.</p>
       </div>
       {% if student %}
       <span class="status-pill {{ 'status-pill-active' if form_data.active else 'status-pill-muted' }}">
@@ -15,70 +26,127 @@
       {% endif %}
     </div>
     <form method="post" class="grid-form">
-      <label>Student Code
+      <label class="field-group">
+        <span class="field-label">Student Code</span>
         <input type="text" name="student_code" value="{{ form_data.student_code }}" required>
       </label>
-      <label>Full Name
+      <label class="field-group">
+        <span class="field-label">Full Name</span>
         <input type="text" name="full_name" value="{{ form_data.full_name }}" required>
       </label>
-      <label>Email
+      <label class="field-group">
+        <span class="field-label">Email</span>
         <input type="email" name="email" value="{{ form_data.email }}">
       </label>
-      <label>Class / Section
+      <label class="field-group">
+        <span class="field-label">Class / Section</span>
         <input type="text" name="class_name" value="{{ form_data.class_name }}" required>
       </label>
       {% if student %}
-      <label class="checkbox-line"><input type="checkbox" name="active" {% if form_data.active %}checked{% endif %}> Active</label>
+      <label class="checkbox-line field-span-full"><input type="checkbox" name="active" {% if form_data.active %}checked{% endif %}> Keep this student available for attendance</label>
       {% endif %}
-      <button type="submit">{{ 'Save Changes' if student else 'Create Student' }}</button>
+      <div class="action-row field-span-full">
+        <button type="submit">{{ 'Save Changes' if student else 'Create Student' }}</button>
+      </div>
     </form>
   </article>
 
   {% if student %}
   <article class="card">
-    <div class="section-head section-head--stack">
+    <div class="card-header">
       <div>
-        <h2>Enrollment</h2>
-        <p class="section-copy">Fingerprint templates are enrolled on the physical R307 sensor. Face data is stored as backend embeddings plus the uploaded image path.</p>
+        <h3 class="card-title">Enrollment and readiness</h3>
+        <p class="card-subtitle">Register a fingerprint template on the R307, upload face data if supported, and confirm whether the student is ready for live attendance.</p>
       </div>
-      <span class="status-pill status-pill-outline">{{ student.student_code }}</span>
+      <span class="status-pill status-pill-outline mono">{{ student.student_code }}</span>
     </div>
+
+    <section class="summary-grid">
+      <div class="summary-tile">
+        <span class="summary-label">Fingerprint</span>
+        <strong class="summary-value">{{ student.fingerprint_profile.template_id if student.fingerprint_profile else 'Not enrolled' }}</strong>
+      </div>
+      <div class="summary-tile">
+        <span class="summary-label">Face Samples</span>
+        <strong class="summary-value">{{ student.face_profiles|length }}</strong>
+      </div>
+      <div class="summary-tile">
+        <span class="summary-label">Class / Section</span>
+        <strong class="summary-value">{{ student.class_name }}</strong>
+      </div>
+      <div class="summary-tile">
+        <span class="summary-label">Attendance Ready</span>
+        <strong class="summary-value">{{ 'Yes' if student.fingerprint_profile else 'Fingerprint needed' }}</strong>
+      </div>
+    </section>
+
+    <section class="info-panel panel-section">
+      <strong>Fingerprint enrollment flow</strong>
+      <p>Click <em>Queue Fingerprint Enrollment</em>, then place the same finger twice on the sensor when the device prompts for it. After success, the template number appears below and on the Students page.</p>
+    </section>
 
     {% if not face_provider_available %}
     <p class="warning-banner">Face enrollment is unavailable until the backend has the <code>face_recognition</code> dependency installed.</p>
     {% endif %}
 
-    <form method="post" action="{{ url_for('students.upload_face', student_id=student.id) }}" enctype="multipart/form-data" class="grid-form">
-      <label>Face Image
-        <input type="file" name="face_image" accept="image/*" {% if not face_provider_available %}disabled{% else %}required{% endif %}>
-      </label>
-      <button type="submit" {% if not face_provider_available %}disabled{% endif %}>Enroll Face</button>
-    </form>
+    <section class="panel-section">
+      <div class="card-header">
+        <div>
+          <h4 class="card-title">Face enrollment</h4>
+          <p class="card-subtitle">Upload a clear image only if face matching is enabled on the backend.</p>
+        </div>
+      </div>
+      <form method="post" action="{{ url_for('students.upload_face', student_id=student.id) }}" enctype="multipart/form-data" class="grid-form">
+        <label class="field-group">
+          <span class="field-label">Face Image</span>
+          <input type="file" name="face_image" accept="image/*" {% if not face_provider_available %}disabled{% else %}required{% endif %}>
+        </label>
+        <div class="action-row field-span-full">
+          <button type="submit" {% if not face_provider_available %}disabled{% endif %}>Enroll Face</button>
+        </div>
+      </form>
+    </section>
 
-    <hr>
-
-    <form method="post" action="{{ url_for('students.queue_fingerprint', student_id=student.id) }}" class="grid-form">
-      <label>Target Device
-        <select name="device_id" required>
-          {% for device in devices %}
-          <option value="{{ device.id }}">{{ device.display_name }}</option>
-          {% endfor %}
-        </select>
-      </label>
-      {% if not devices %}
-      <p class="warning-banner">Add and activate at least one device before queueing fingerprint enrollment.</p>
-      {% endif %}
-      <button type="submit" {% if not devices %}disabled{% endif %}>Queue Fingerprint Enrollment</button>
-    </form>
-
-    <div class="meta-block">
-      <strong>Current fingerprint template:</strong>
-      <span>{{ student.fingerprint_profile.template_id if student.fingerprint_profile else 'Not enrolled' }}</span>
+    <section class="panel-section">
+      <div class="card-header">
+        <div>
+          <h4 class="card-title">Fingerprint queue</h4>
+          <p class="card-subtitle">Send the enrollment request to an active device so the student can register on the sensor.</p>
+        </div>
+        <span class="status-pill status-pill-outline">{{ devices|length }} active device{{ '' if devices|length == 1 else 's' }}</span>
+      </div>
+      <form method="post" action="{{ url_for('students.queue_fingerprint', student_id=student.id) }}" class="grid-form">
+        <label class="field-group">
+          <span class="field-label">Target Device</span>
+          <select name="device_id" required>
+            {% for device in devices %}
+            <option value="{{ device.id }}">{{ device.display_name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        {% if not devices %}
+        <p class="warning-banner">Add and activate at least one device before queueing fingerprint enrollment.</p>
+        {% endif %}
+        <div class="action-row field-span-full">
+          <button type="submit" {% if not devices %}disabled{% endif %}>Queue Fingerprint Enrollment</button>
+        </div>
+      </form>
+    </section>
+  </article>
+  {% else %}
+  <article class="card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">What happens next</h3>
+        <p class="card-subtitle">After the record is created, use the student page to finish the device-side enrollment steps.</p>
+      </div>
     </div>
-    <div class="meta-block">
-      <strong>Face samples:</strong>
-      <span>{{ student.face_profiles|length }}</span>
-    </div>
+    <ul class="detail-list">
+      <li>Queue fingerprint enrollment to an active ESP32 device with the R307 sensor attached.</li>
+      <li>Upload a face image only if the backend has face recognition enabled.</li>
+      <li>Keep class and section naming consistent with session setup so attendance matching stays clean.</li>
+      <li>Use the Students list to confirm which records still need fingerprint enrollment before live rollout.</li>
+    </ul>
   </article>
   {% endif %}
 </section>
