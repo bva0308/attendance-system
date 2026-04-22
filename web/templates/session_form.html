@@ -1,31 +1,81 @@
 {% extends "base.html" %}
 {% block title %}Create Session{% endblock %}
 {% block content %}
-<section class="card">
-  <div class="section-head section-head--stack">
-    <div>
-      <h2>Create Session</h2>
-      <p class="section-copy">Match the class / section name to student records so attendance and session views stay aligned.</p>
-    </div>
-    <span class="status-pill {{ 'status-pill-warn' if form_data.allow_duplicates else 'status-pill-active' }}">
-      {{ 'Duplicates Allowed' if form_data.allow_duplicates else 'One Attendance Per Student' }}
-    </span>
+<section class="page-header">
+  <div class="page-header__content">
+    <span class="page-kicker">Session Setup</span>
+    <h2 class="page-title">Create a session</h2>
+    <p class="page-copy">Define the attendance window, match the class and section naming to your student roster, and decide whether duplicate check-ins are allowed.</p>
   </div>
-  <form method="post" class="grid-form">
-    <label>Session Title
-      <input type="text" name="title" value="{{ form_data.title }}" required>
-    </label>
-    <label>Class / Section
-      <input type="text" name="class_name" value="{{ form_data.class_name }}" required>
-    </label>
-    <label>Start Time
-      <input type="datetime-local" name="starts_at" value="{{ form_data.starts_at }}" required>
-    </label>
-    <label>End Time
-      <input type="datetime-local" name="ends_at" value="{{ form_data.ends_at }}" required>
-    </label>
-    <label class="checkbox-line"><input type="checkbox" name="allow_duplicates" {% if form_data.allow_duplicates %}checked{% endif %}> Allow duplicate attendance</label>
-    <button type="submit">Create Session</button>
-  </form>
+  <div class="page-actions">
+    <a class="button-link button-link-secondary" href="{{ url_for('sessions.sessions_list') }}">Back to sessions</a>
+  </div>
+</section>
+
+<section class="layout-grid">
+  <article class="card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">Session details</h3>
+        <p class="card-subtitle">Keep naming aligned with the student roster so matching, filtering, and attendance reporting stay predictable.</p>
+      </div>
+      <span class="status-pill {{ 'status-pill-warn' if form_data.allow_duplicates else 'status-pill-active' }}">
+        {{ 'Duplicates Allowed' if form_data.allow_duplicates else 'One Attendance Per Student' }}
+      </span>
+    </div>
+    <form method="post" class="grid-form">
+      <label class="field-group">
+        <span class="field-label">Session Title</span>
+        <input type="text" name="title" value="{{ form_data.title }}" required>
+      </label>
+      <label class="field-group">
+        <span class="field-label">Class / Section</span>
+        <input type="text" name="class_name" value="{{ form_data.class_name }}" required>
+      </label>
+      <label class="field-group">
+        <span class="field-label">Start Time</span>
+        <input type="datetime-local" name="starts_at" value="{{ form_data.starts_at }}" required>
+      </label>
+      <label class="field-group">
+        <span class="field-label">End Time</span>
+        <input type="datetime-local" name="ends_at" value="{{ form_data.ends_at }}" required>
+      </label>
+      <label class="checkbox-line field-span-full"><input type="checkbox" name="allow_duplicates" {% if form_data.allow_duplicates %}checked{% endif %}> Allow duplicate attendance for the same student during this session</label>
+      <div class="action-row field-span-full">
+        <button type="submit">Create Session</button>
+      </div>
+    </form>
+  </article>
+
+  <article class="card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">Review before go-live</h3>
+        <p class="card-subtitle">A clean session setup reduces device-side confusion once students begin checking in.</p>
+      </div>
+    </div>
+    <section class="summary-grid">
+      <div class="summary-tile">
+        <span class="summary-label">Attendance Rule</span>
+        <strong class="summary-value">{{ 'Duplicates allowed' if form_data.allow_duplicates else 'One mark per student' }}</strong>
+      </div>
+      <div class="summary-tile">
+        <span class="summary-label">QR Flow</span>
+        <strong class="summary-value">Generated automatically</strong>
+      </div>
+      <div class="summary-tile">
+        <span class="summary-label">Class Match</span>
+        <strong class="summary-value">{{ form_data.class_name or 'Set the roster group name' }}</strong>
+      </div>
+    </section>
+    <section class="panel-section">
+      <ul class="detail-list">
+        <li>Use the exact class and section name that appears on student records.</li>
+        <li>Choose a time window long enough for the real check-in period, not just the demo flow.</li>
+        <li>Allow duplicates only when repeated attendance marks are a real requirement for the event.</li>
+        <li>After saving, activate the session you want devices to use for live attendance.</li>
+      </ul>
+    </section>
+  </article>
 </section>
 {% endblock %}

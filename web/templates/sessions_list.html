@@ -1,44 +1,74 @@
 {% extends "base.html" %}
 {% block title %}Sessions{% endblock %}
 {% block content %}
-<section class="card">
-  <div class="section-head">
-    <h2>Sessions</h2>
-    <a class="button-link" href="{{ url_for('sessions.session_create') }}">Create Session</a>
+<section class="page-header">
+  <div class="page-header__content">
+    <span class="page-kicker">Sessions</span>
+    <h2 class="page-title">Attendance windows</h2>
+    <p class="page-copy">Manage scheduled check-in windows, activate the current session, and keep the QR workflow ready for the classroom in front of you.</p>
   </div>
-  <table>
-    <thead>
-      <tr><th>Title</th><th>Class / Section</th><th>Window</th><th>Attendance Policy</th><th>Status</th><th>QR</th><th>Actions</th></tr>
-    </thead>
-    <tbody>
-      {% for item in sessions %}
-      <tr>
-        <td>{{ item.title }}</td>
-        <td>{{ item.class_name }}</td>
-        <td>{{ item.starts_at.strftime('%Y-%m-%d %H:%M') }} to {{ item.ends_at.strftime('%Y-%m-%d %H:%M') }}</td>
-        <td>
-          <span class="status-pill {{ 'status-pill-warn' if item.allow_duplicates else 'status-pill-outline' }}">
-            {{ 'Duplicates Allowed' if item.allow_duplicates else 'Single Attendance' }}
-          </span>
-        </td>
-        <td>
-          <span class="status-pill {{ 'status-pill-active' if item.is_active else 'status-pill-muted' }}">
-            {{ 'Active' if item.is_active else 'Inactive' }}
-          </span>
-        </td>
-        <td><img class="qr-thumb" src="{{ url_for('sessions.session_qr_png', session_id=item.id) }}" alt="Session QR"></td>
-        <td>
-          {% if item.is_active %}
-          <form method="post" action="{{ url_for('sessions.session_deactivate', session_id=item.id) }}"><button type="submit">Deactivate</button></form>
-          {% else %}
-          <form method="post" action="{{ url_for('sessions.session_activate', session_id=item.id) }}"><button type="submit">Activate</button></form>
-          {% endif %}
-        </td>
-      </tr>
-      {% else %}
-      <tr><td colspan="7">No sessions yet.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="page-actions">
+    <a class="button-link" href="{{ url_for('sessions.session_create') }}">Create session</a>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">Scheduled sessions</h3>
+      <p class="card-subtitle">Each session defines the allowed attendance window, class scope, QR payload, and duplicate policy.</p>
+    </div>
+    <span class="status-pill status-pill-outline">{{ sessions|length }} total</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Session</th><th>Window</th><th>Attendance Policy</th><th>QR</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for item in sessions %}
+        <tr>
+          <td>
+            <div class="table-title">{{ item.title }}</div>
+            <div class="table-subtext">{{ item.class_name }}</div>
+          </td>
+          <td>
+            <div class="table-meta">
+              <span>Starts {{ item.starts_at.strftime('%Y-%m-%d %H:%M') }}</span>
+              <span>Ends {{ item.ends_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="status-pill {{ 'status-pill-warn' if item.allow_duplicates else 'status-pill-outline' }}">
+              {{ 'Duplicates Allowed' if item.allow_duplicates else 'Single Attendance' }}
+            </span>
+          </td>
+          <td>
+            <img class="qr-thumb" src="{{ url_for('sessions.session_qr_png', session_id=item.id) }}" alt="Session QR">
+            <div class="qr-caption">Scan at check-in</div>
+          </td>
+          <td>
+            <span class="status-pill {{ 'status-pill-active' if item.is_active else 'status-pill-muted' }}">
+              {{ 'Active' if item.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="table-action">
+            {% if item.is_active %}
+            <form method="post" action="{{ url_for('sessions.session_deactivate', session_id=item.id) }}">
+              <button class="button-link-secondary button-link-compact" type="submit">Deactivate</button>
+            </form>
+            {% else %}
+            <form method="post" action="{{ url_for('sessions.session_activate', session_id=item.id) }}">
+              <button class="button-link-compact" type="submit">Activate</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="muted-copy">No sessions have been created yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 {% endblock %}
