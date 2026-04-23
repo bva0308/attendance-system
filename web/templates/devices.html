@@ -1,71 +1,133 @@
 {% extends "base.html" %}
 {% block title %}Devices{% endblock %}
 {% block content %}
-<section class="two-col">
+{% set ns = namespace(online=0, enabled=0, queued=0, failed=0) %}
+{% for device in devices %}
+  {% if device.last_status in ['ready', 'idle', 'scanning'] %}
+    {% set ns.online = ns.online + 1 %}
+  {% endif %}
+  {% if device.is_active %}
+    {% set ns.enabled = ns.enabled + 1 %}
+  {% endif %}
+{% endfor %}
+{% for command in queued_commands %}
+  {% if command.status == 'queued' %}
+    {% set ns.queued = ns.queued + 1 %}
+  {% endif %}
+  {% if command.status == 'failed' %}
+    {% set ns.failed = ns.failed + 1 %}
+  {% endif %}
+{% endfor %}
+
+<section class="page-header">
+  <div class="page-header__content">
+    <span class="page-kicker">Devices</span>
+    <h2 class="page-title">Device fleet and command queue</h2>
+    <p class="page-copy">Confirm the ESP32 fleet is alive before enrollment, review heartbeat details, and watch queued actions move through the backend command flow.</p>
+  </div>
+</section>
+
+<section class="metric-grid">
+  <article class="metric-card">
+    <span class="metric-label">Registered Devices</span>
+    <strong class="metric-value">{{ devices|length }}</strong>
+    <p class="metric-copy">All devices currently known to the backend.</p>
+  </article>
+  <article class="metric-card">
+    <span class="metric-label">Responsive States</span>
+    <strong class="metric-value">{{ ns.online }}</strong>
+    <p class="metric-copy">Devices whose latest heartbeat reports a ready, idle, or scanning state.</p>
+  </article>
+  <article class="metric-card">
+    <span class="metric-label">Queued Commands</span>
+    <strong class="metric-value">{{ ns.queued }}</strong>
+    <p class="metric-copy">Actions waiting for the next device poll to pick them up.</p>
+  </article>
+  <article class="metric-card">
+    <span class="metric-label">Failed Commands</span>
+    <strong class="metric-value">{{ ns.failed }}</strong>
+    <p class="metric-copy">Recent device actions that completed with a failure state.</p>
+  </article>
+</section>
+
+<section class="layout-grid">
   <article class="card">
-    <div class="section-head section-head--stack">
+    <div class="card-header">
       <div>
-        <h2>Registered Devices</h2>
-        <p class="section-copy">Device connectivity, health, and activation are tracked by the backend heartbeat fields shown below.</p>
+        <h3 class="card-title">Registered devices</h3>
+        <p class="card-subtitle">Use this page to confirm the ESP32 is online before fingerprint enrollment or a live attendance run.</p>
       </div>
     </div>
-    <table>
-      <thead>
-        <tr><th>Name</th><th>Device ID</th><th>Heartbeat</th><th>Enabled</th><th>Last Seen</th><th>IP</th></tr>
-      </thead>
-      <tbody>
-        {% for device in devices %}
-        <tr>
-          <td>{{ device.display_name }}</td>
-          <td>{{ device.device_id }}</td>
-          <td>
-            <span class="status-pill {{ 'status-pill-active' if device.last_status in ['ready', 'idle', 'scanning'] else 'status-pill-outline' }}">
-              {{ (device.last_status or 'unknown')|replace('_', ' ')|title }}
-            </span>
-          </td>
-          <td>
-            <span class="status-pill {{ 'status-pill-active' if device.is_active else 'status-pill-muted' }}">
-              {{ 'Enabled' if device.is_active else 'Disabled' }}
-            </span>
-          </td>
-          <td>{{ device.last_seen_at|datetime_display }}</td>
-          <td>{{ device.ip_address or '-' }}</td>
-        </tr>
-        {% else %}
-        <tr><td colspan="6">No devices registered.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Device</th><th>Connectivity</th><th>State</th><th>Last Seen</th><th>Firmware</th></tr>
+        </thead>
+        <tbody>
+          {% for device in devices %}
+          <tr>
+            <td>
+              <div class="table-title">{{ device.display_name }}</div>
+              <div class="table-subtext mono">{{ device.device_id }}</div>
+            </td>
+            <td>
+              <div class="table-meta">
+                <span>IP {{ device.ip_address or '-' }}</span>
+                <span>RSSI {{ device.last_rssi if device.last_rssi is not none else '-' }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="pill-cluster">
+                <span class="status-pill {{ 'status-pill-active' if device.last_status in ['ready', 'idle', 'scanning'] else 'status-pill-outline' }}">
+                  {{ (device.last_status or 'unknown')|replace('_', ' ')|title }}
+                </span>
+                <span class="status-pill {{ 'status-pill-active' if device.is_active else 'status-pill-muted' }}">
+                  {{ 'Enabled' if device.is_active else 'Disabled' }}
+                </span>
+              </div>
+            </td>
+            <td>{{ device.last_seen_at|datetime_display }}</td>
+            <td>{{ device.firmware_version or '-' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="muted-copy">No devices are registered yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </article>
 
   <article class="card">
-    <div class="section-head section-head--stack">
+    <div class="card-header">
       <div>
-        <h2>Queued / Recent Commands</h2>
-        <p class="section-copy">Recent command activity helps verify that enrollment and device actions are flowing through the queue.</p>
+        <h3 class="card-title">Queued and recent commands</h3>
+        <p class="card-subtitle">Recent command activity helps verify that enrollment and device actions are moving through the queue as expected.</p>
       </div>
     </div>
-    <table>
-      <thead>
-        <tr><th>Created</th><th>Device</th><th>Type</th><th>Status</th></tr>
-      </thead>
-      <tbody>
-        {% for command in queued_commands %}
-        <tr>
-          <td>{{ command.created_at|datetime_display }}</td>
-          <td>{{ command.device.display_name }}</td>
-          <td>{{ command.command_type }}</td>
-          <td>
-            <span class="status-pill {{ 'status-pill-active' if command.status == 'completed' else 'status-pill-outline' }}">
-              {{ command.status|replace('_', ' ')|title }}
-            </span>
-          </td>
-        </tr>
-        {% else %}
-        <tr><td colspan="4">No commands queued.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Created</th><th>Device</th><th>Type</th><th>Status</th><th>Completed</th></tr>
+        </thead>
+        <tbody>
+          {% for command in queued_commands %}
+          <tr>
+            <td>{{ command.created_at|datetime_display }}</td>
+            <td>{{ command.device.display_name }}</td>
+            <td><span class="mono">{{ command.command_type }}</span></td>
+            <td>
+              <span class="status-pill {{ 'status-pill-active' if command.status == 'completed' else 'status-pill-danger' if command.status == 'failed' else 'status-pill-outline' }}">
+                {{ command.status|replace('_', ' ')|title }}
+              </span>
+            </td>
+            <td>{{ command.completed_at|datetime_display if command.completed_at else '-' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="muted-copy">No commands have been queued yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </article>
 </section>
 {% endblock %}
