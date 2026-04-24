@@ -11,11 +11,11 @@
 
 ### Firmware
 
-1. Copy `config.example.h` to `config.h`
-2. Fill Wi-Fi and backend settings
-3. Select `AI Thinker ESP32-CAM`
-4. Ensure PSRAM is enabled
-5. Compile sketch in Arduino IDE
+1. Review `firmware/esp32_cam_attendance/config.py`
+2. Optionally copy `firmware/device_settings.json.example` to `firmware/device_settings.json`
+3. Set the Wi-Fi SSID, password, backend URL, device ID, and API key
+4. Upload files with `upload_to_esp32.bat COMx`
+5. Confirm the ESP32 boots into `main.py`
 
 ## Hardware Boot Test
 
@@ -23,7 +23,17 @@
 2. Open serial monitor at `115200`
 3. Confirm boot counter and Wi-Fi logs appear
 4. Confirm camera init succeeds
-5. Confirm fingerprint sensor online message appears
+5. Confirm fingerprint sensor logs either `sensor online` or `sensor not detected`
+
+## Network Validation
+
+1. On the backend PC, run `ipconfig`
+2. Confirm the Wi-Fi IPv4 address matches the subnet the ESP32 joins
+3. Set `backend_base_url` to `http://<pc-ip>:5000`
+4. Start Flask with `python app.py` from the `backend/` folder
+5. Confirm the device heartbeat appears on the dashboard or `/devices` page
+
+If the ESP32 receives an address like `192.168.18.x` while the PC is on `192.168.2.x`, the board is on a different network and will not reach the backend until both are on the same LAN.
 
 ## Verification Checklist
 
