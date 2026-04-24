@@ -175,9 +175,10 @@ You should replace the admin hash before presentation use.
 ## Firmware Setup
 
 1. Open [config.py](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/esp32_cam_attendance/config.py) and set Wi-Fi SSID, password, backend base URL, device ID, and device API key for your environment.
-2. Review [main.py](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/esp32_cam_attendance/main.py) and [state_machine.py](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/esp32_cam_attendance/state_machine.py) as the firmware entrypoint and sequential verification flow.
-3. Match the configured `DEVICE_ID` and `DEVICE_API_KEY` with a registered backend device record.
-4. Deploy the equivalent logic to the ESP32-CAM environment you are using for presentation or hardware integration.
+2. If you want to avoid editing tracked source for each network change, copy [device_settings.json.example](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/device_settings.json.example) to `firmware/device_settings.json` and put your live values there. The firmware will use that file if it exists.
+3. Review [main.py](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/esp32_cam_attendance/main.py) and [state_machine.py](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/esp32_cam_attendance/state_machine.py) as the firmware entrypoint and sequential verification flow.
+4. Match the configured `DEVICE_ID` and `DEVICE_API_KEY` with a registered backend device record.
+5. Upload the files with [upload_to_esp32.bat](/C:/Users/Dipesh/Desktop/By%20Name%20New/Bibha/code/sketch_apr12c/attendance-system/firmware/upload_to_esp32.bat). If `firmware/device_settings.json` exists, the script uploads it automatically.
 
 ## ESP32-CAM Wiring Notes
 
@@ -186,12 +187,17 @@ You should replace the admin hash before presentation use.
    - `U0T` to adapter `RX`
    - `GND` to `GND`
    - `5V` to stable `5V`
-2. Pull `GPIO0` to `GND` for flashing.
-3. Press reset or power cycle the board.
-4. After flashing your target firmware build, remove `GPIO0` from `GND`.
-5. Press reset again to boot the device.
+2. Wire the R307 as follows:
+   - `VCC` to `VIN / 5V`
+   - `GND` to `GND`
+   - `TX` to `GPIO16`
+   - `RX` to `GPIO17`
+3. Pull `GPIO0` to `GND` for flashing.
+4. Press reset or power cycle the board.
+5. After flashing your target firmware build, remove `GPIO0` from `GND`.
+6. Press reset again to boot the device.
 
-This firmware intentionally does not use pins `1` and `3` for the fingerprint sensor, so upload/debug remains separate from the R307 UART link.
+This firmware intentionally keeps the fingerprint sensor off the primary serial pins `GPIO1` and `GPIO3`, so upload/debug remains separate from the R307 UART link.
 
 ## Quick Demo Workflow
 
