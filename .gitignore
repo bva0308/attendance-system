@@ -9,4 +9,5 @@ attendance.db
 backend/attendance.db
 uploads/
 *.log
+*.claude
 firmware/device_settings.json
