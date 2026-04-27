@@ -5,7 +5,6 @@
   <div class="page-header__content">
     <span class="page-kicker">Sessions</span>
     <h2 class="page-title">Attendance windows</h2>
-    <p class="page-copy">Manage scheduled check-in windows, activate the current session, and keep the QR workflow ready for the classroom in front of you.</p>
   </div>
   <div class="page-actions">
     <a class="button-link" href="{{ url_for('sessions.session_create') }}">Create session</a>
@@ -16,7 +15,6 @@
   <div class="card-header">
     <div>
       <h3 class="card-title">Scheduled sessions</h3>
-      <p class="card-subtitle">Each session defines the allowed attendance window, class scope, QR payload, and duplicate policy.</p>
     </div>
     <span class="status-pill status-pill-outline">{{ sessions|length }} total</span>
   </div>
