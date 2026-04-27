@@ -4,7 +4,12 @@ import uuid
 from dataclasses import dataclass
 from typing import Iterable
 
-import numpy as np
+try:
+    import numpy as np
+    _numpy_available = True
+except ImportError:
+    _numpy_available = False
+
 from flask import current_app
 from werkzeug.utils import secure_filename
 
