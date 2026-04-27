@@ -5,7 +5,6 @@
   <div class="page-header__content">
     <span class="page-kicker">Attendance</span>
     <h2 class="page-title">Verification history</h2>
-    <p class="page-copy">Review every completed fingerprint-stage attempt in {{ display_timezone }}, including accepted check-ins, rejected scans, and the verification methods involved.</p>
   </div>
   <div class="page-actions">
     {% if filters.class_name or filters.student_id or filters.session_id or filters.date_from or filters.date_to %}
@@ -19,7 +18,6 @@
   <div class="card-header">
     <div>
       <h3 class="card-title">Filter the log</h3>
-      <p class="card-subtitle">Use class, student, session, and date filters to narrow the attendance history before exporting or reviewing anomalies.</p>
     </div>
   </div>
   <form method="get" class="filter-grid">
@@ -63,7 +61,6 @@
   <div class="card-header">
     <div>
       <h3 class="card-title">Attendance records</h3>
-      <p class="card-subtitle">The table below lists all matching verification outcomes with status, methods used, and notes from the workflow.</p>
     </div>
     <span class="status-pill status-pill-outline">{{ records|length }} result{{ '' if records|length == 1 else 's' }}</span>
   </div>
