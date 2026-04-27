@@ -5,7 +5,6 @@
   <div class="page-header__content">
     <span class="page-kicker">Session Setup</span>
     <h2 class="page-title">Create a session</h2>
-    <p class="page-copy">Define the attendance window, match the class and section naming to your student roster, and decide whether duplicate check-ins are allowed.</p>
   </div>
   <div class="page-actions">
     <a class="button-link button-link-secondary" href="{{ url_for('sessions.sessions_list') }}">Back to sessions</a>
@@ -17,7 +16,6 @@
     <div class="card-header">
       <div>
         <h3 class="card-title">Session details</h3>
-        <p class="card-subtitle">Keep naming aligned with the student roster so matching, filtering, and attendance reporting stay predictable.</p>
       </div>
       <span class="status-pill {{ 'status-pill-warn' if form_data.allow_duplicates else 'status-pill-active' }}">
         {{ 'Duplicates Allowed' if form_data.allow_duplicates else 'One Attendance Per Student' }}
@@ -47,35 +45,5 @@
     </form>
   </article>
 
-  <article class="card">
-    <div class="card-header">
-      <div>
-        <h3 class="card-title">Review before go-live</h3>
-        <p class="card-subtitle">A clean session setup reduces device-side confusion once students begin checking in.</p>
-      </div>
-    </div>
-    <section class="summary-grid">
-      <div class="summary-tile">
-        <span class="summary-label">Attendance Rule</span>
-        <strong class="summary-value">{{ 'Duplicates allowed' if form_data.allow_duplicates else 'One mark per student' }}</strong>
-      </div>
-      <div class="summary-tile">
-        <span class="summary-label">QR Flow</span>
-        <strong class="summary-value">Generated automatically</strong>
-      </div>
-      <div class="summary-tile">
-        <span class="summary-label">Class Match</span>
-        <strong class="summary-value">{{ form_data.class_name or 'Set the roster group name' }}</strong>
-      </div>
-    </section>
-    <section class="panel-section">
-      <ul class="detail-list">
-        <li>Use the exact class and section name that appears on student records.</li>
-        <li>Choose a time window long enough for the real check-in period, not just the demo flow.</li>
-        <li>Allow duplicates only when repeated attendance marks are a real requirement for the event.</li>
-        <li>After saving, activate the session you want devices to use for live attendance.</li>
-      </ul>
-    </section>
-  </article>
 </section>
 {% endblock %}
