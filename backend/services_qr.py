@@ -1,8 +1,13 @@
 from io import BytesIO
 
-import cv2
-import numpy as np
 import qrcode
+
+try:
+    import cv2
+    import numpy as np
+    _cv2_available = True
+except ImportError:
+    _cv2_available = False
 
 
 def generate_qr_png(payload: str) -> bytes:
@@ -13,6 +18,8 @@ def generate_qr_png(payload: str) -> bytes:
 
 
 def decode_qr_from_bytes(image_bytes: bytes) -> str | None:
+    if not _cv2_available:
+        return None
     arr = np.frombuffer(image_bytes, dtype=np.uint8)
     image = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if image is None:
