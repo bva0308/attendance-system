@@ -23,7 +23,6 @@
   <div class="page-header__content">
     <span class="page-kicker">Devices</span>
     <h2 class="page-title">Device fleet and command queue</h2>
-    <p class="page-copy">Confirm the ESP32 fleet is alive before enrollment, review heartbeat details, and watch queued actions move through the backend command flow.</p>
   </div>
 </section>
 
@@ -31,22 +30,18 @@
   <article class="metric-card">
     <span class="metric-label">Registered Devices</span>
     <strong class="metric-value">{{ devices|length }}</strong>
-    <p class="metric-copy">All devices currently known to the backend.</p>
   </article>
   <article class="metric-card">
     <span class="metric-label">Responsive States</span>
     <strong class="metric-value">{{ ns.online }}</strong>
-    <p class="metric-copy">Devices whose latest heartbeat reports a ready, idle, or scanning state.</p>
   </article>
   <article class="metric-card">
     <span class="metric-label">Queued Commands</span>
     <strong class="metric-value">{{ ns.queued }}</strong>
-    <p class="metric-copy">Actions waiting for the next device poll to pick them up.</p>
   </article>
   <article class="metric-card">
     <span class="metric-label">Failed Commands</span>
     <strong class="metric-value">{{ ns.failed }}</strong>
-    <p class="metric-copy">Recent device actions that completed with a failure state.</p>
   </article>
 </section>
 
