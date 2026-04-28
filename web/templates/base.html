@@ -37,9 +37,7 @@
   </header>
 
   <main class="page-shell{% if not session.get('admin_authenticated') %} page-shell-auth{% endif %}">
-    {% if request.endpoint in ['students.dashboard_home', 'attendance.attendance_records', 'students.devices_page'] %}
-    <div class="live-banner">Live refresh is enabled on this screen every 5 seconds when the page is idle.</div>
-    {% endif %}
+
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <section class="flash-stack">
