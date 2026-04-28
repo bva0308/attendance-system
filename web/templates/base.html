@@ -15,7 +15,7 @@
         <a class="brand-title" href="{{ url_for('students.dashboard_home') if session.get('admin_authenticated') else url_for('auth.login') }}">
           Secure Attendance System
         </a>
-        <p class="brand-copy">Student setup, session control, and device verification tracking for the ESP32 attendance workflow.</p>
+        <p class="brand-copy">ESP32 attendance system</p>
       </div>
       {% if session.get('admin_authenticated') %}
       <div class="site-header__meta">
