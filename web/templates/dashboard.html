@@ -37,7 +37,6 @@
     <div class="card-header">
       <div>
         <h3 class="card-title">Recent attendance</h3>
-        <p class="card-subtitle">Every completed fingerprint-stage attempt appears here in {{ display_timezone }}, including successful marks and rejections.</p>
       </div>
       <a href="{{ url_for('attendance.attendance_records') }}">View full log</a>
     </div>
@@ -72,7 +71,6 @@
     <div class="card-header">
       <div>
         <h3 class="card-title">Device health</h3>
-        <p class="card-subtitle">Heartbeat status and signal strength come from the last device sync stored by the backend. Timestamps are shown in {{ display_timezone }}.</p>
       </div>
       <a href="{{ url_for('students.devices_page') }}">Manage devices</a>
     </div>
