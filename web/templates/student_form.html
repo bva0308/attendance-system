@@ -5,7 +5,6 @@
   <div class="page-header__content">
     <span class="page-kicker">Student Record</span>
     <h2 class="page-title">{{ 'Edit ' ~ student.full_name if student else 'Create a new student' }}</h2>
-    <p class="page-copy">Use the same class and section naming as your session setup so filtering, matching, and attendance review stay consistent.</p>
   </div>
   <div class="page-actions">
     <a class="button-link button-link-secondary" href="{{ url_for('students.students_list') }}">Back to students</a>
@@ -17,7 +16,6 @@
     <div class="card-header">
       <div>
         <h3 class="card-title">{{ 'Student details' if student else 'Create student' }}</h3>
-        <p class="card-subtitle">Keep the record precise here first, then complete device-side enrollment after the student exists.</p>
       </div>
       {% if student %}
       <span class="status-pill {{ 'status-pill-active' if form_data.active else 'status-pill-muted' }}">
