@@ -125,20 +125,6 @@
     </section>
   </article>
   {% else %}
-  <article class="card">
-    <div class="card-header">
-      <div>
-        <h3 class="card-title">What happens next</h3>
-        <p class="card-subtitle">After the record is created, use the student page to finish the device-side enrollment steps.</p>
-      </div>
-    </div>
-    <ul class="detail-list">
-      <li>Queue fingerprint enrollment to an active ESP32 device with the R307 sensor attached.</li>
-      <li>Upload a face image only if the backend has face recognition enabled.</li>
-      <li>Keep class and section naming consistent with session setup so attendance matching stays clean.</li>
-      <li>Use the Students list to confirm which records still need fingerprint enrollment before live rollout.</li>
-    </ul>
-  </article>
   {% endif %}
 </section>
 {% endblock %}
