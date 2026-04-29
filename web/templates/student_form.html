@@ -86,7 +86,6 @@
       <div class="card-header">
         <div>
           <h4 class="card-title">Face enrollment</h4>
-          <p class="card-subtitle">Upload a clear image only if face matching is enabled on the backend.</p>
         </div>
       </div>
       <form method="post" action="{{ url_for('students.upload_face', student_id=student.id) }}" enctype="multipart/form-data" class="grid-form">
@@ -104,7 +103,6 @@
       <div class="card-header">
         <div>
           <h4 class="card-title">Fingerprint queue</h4>
-          <p class="card-subtitle">Send the enrollment request to an active device so the student can register on the sensor.</p>
         </div>
         <span class="status-pill status-pill-outline">{{ devices|length }} active device{{ '' if devices|length == 1 else 's' }}</span>
       </div>
