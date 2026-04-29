@@ -54,7 +54,6 @@
     <div class="card-header">
       <div>
         <h3 class="card-title">Enrollment and readiness</h3>
-        <p class="card-subtitle">Register a fingerprint template on the R307, upload face data if supported, and confirm whether the student is ready for live attendance.</p>
       </div>
       <span class="status-pill status-pill-outline mono">{{ student.student_code }}</span>
     </div>
@@ -78,12 +77,8 @@
       </div>
     </section>
 
-    <section class="info-panel panel-section">
-      <strong>Fingerprint enrollment flow</strong>
-      <p>Click <em>Queue Fingerprint Enrollment</em>, then place the same finger twice on the sensor when the device prompts for it. After success, the template number appears below and on the Students page.</p>
-    </section>
 
-    {% if not face_provider_available %}
+{% if not face_provider_available %}
     <p class="warning-banner">Face enrollment is unavailable until the backend has the <code>face_recognition</code> dependency installed.</p>
     {% endif %}
 
