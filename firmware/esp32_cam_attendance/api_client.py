@@ -2,11 +2,11 @@ import json
 
 try:
     from .config import DeviceConfig
-    from .models import DeviceCommandInfo, GenericResult, SessionInfo, StudentInfo
+    from .models import GenericResult, SessionInfo, StudentInfo
     from .runtime import HttpClient
 except ImportError:
     from config import DeviceConfig
-    from models import DeviceCommandInfo, GenericResult, SessionInfo, StudentInfo
+    from models import GenericResult, SessionInfo, StudentInfo
     from runtime import HttpClient
 
 
@@ -52,31 +52,6 @@ class ApiClient:
             return False, SessionInfo(), 0
         return result.ok, SessionInfo.from_dict(parsed.get("active_session")), int(parsed.get("pending_commands") or 0)
 
-    def fetch_next_command(self):
-        status_code, body = self.http.request(
-            "GET",
-            self._endpoint_url("/api/device/commands/next"),
-            headers=self._headers(),
-        )
-        parsed, result = self._parse_json_response(status_code, body, "invalid json response")
-        if not parsed or not result.ok:
-            return DeviceCommandInfo()
-        return DeviceCommandInfo.from_dict(parsed.get("command"))
-
-    def complete_command(self, command_id, status, template_id, message):
-        status_code, body = self.http.request(
-            "POST",
-            self._endpoint_url("/api/device/commands/{0}/complete".format(command_id)),
-            headers=dict(self._headers(), **{"Content-Type": "application/json"}),
-            json_body={
-                "status": status,
-                "template_id": template_id,
-                "message": message,
-            },
-        )
-        _, result = self._parse_json_response(status_code, body, "invalid json response")
-        return result
-
     def verify_qr(self, frame_bytes):
         status_code, body = self.http.request(
             "POST",
@@ -106,57 +81,3 @@ class ApiClient:
         if not result.ok or not parsed:
             return result, StudentInfo()
         return GenericResult(True, "face verified"), StudentInfo.from_dict(parsed.get("student"))
-
-    def resolve_fingerprint_student(self, session_token, template_id):
-        status_code, body = self.http.request(
-            "POST",
-            self._endpoint_url("/api/device/resolve-fingerprint-student"),
-            headers=dict(self._headers(), **{"Content-Type": "application/json"}),
-            json_body={
-                "session_token": session_token,
-                "template_id": template_id,
-            },
-        )
-        parsed, result = self._parse_json_response(status_code, body, "invalid fingerprint resolution response")
-        if not result.ok or not parsed:
-            return result, StudentInfo()
-        return GenericResult(True, "fingerprint resolved"), StudentInfo.from_dict(parsed.get("student"))
-
-    def mark_attendance(self, session, student):
-        status_code, body = self.http.request(
-            "POST",
-            self._endpoint_url("/api/device/mark-attendance"),
-            headers=dict(self._headers(), **{"Content-Type": "application/json"}),
-            json_body={
-                "session_token": session.token,
-                "student_id": student.id,
-                "verified_by_qr": True,
-                "verified_by_face": True,
-                "verified_by_fingerprint": True,
-                "note": "Marked from Python firmware port",
-            },
-        )
-        _, result = self._parse_json_response(status_code, body, "invalid json response")
-        return result
-
-    def log_verification_failure(self, session, student, reason, verified_by_fingerprint=False):
-        payload = {
-            "session_token": session.token,
-            "verified_by_qr": True,
-            "verified_by_face": bool(student and student.valid),
-            "verified_by_fingerprint": verified_by_fingerprint,
-            "status": "rejected",
-            "note": reason,
-        }
-        if student and student.valid:
-            payload["student_id"] = student.id
-        else:
-            payload["student_label"] = "Unknown fingerprint"
-        status_code, body = self.http.request(
-            "POST",
-            self._endpoint_url("/api/device/log-verification-failure"),
-            headers=dict(self._headers(), **{"Content-Type": "application/json"}),
-            json_body=payload,
-        )
-        _, result = self._parse_json_response(status_code, body, "invalid json response")
-        return result
