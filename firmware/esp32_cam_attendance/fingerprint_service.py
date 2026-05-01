@@ -50,6 +50,11 @@ class FingerprintService:
         log("finger", "sensor online" if self.ready else "sensor not detected")
         return self.ready
 
+    def _ensure_ready(self):
+        if self.ready:
+            return True
+        return self.begin()
+
     def sensor_ready(self):
         return self.ready
 
@@ -65,7 +70,7 @@ class FingerprintService:
         return False, "fingerprint timeout"
 
     def verify_template(self, expected_template_id, timeout_ms):
-        if not self.ready:
+        if not self._ensure_ready():
             return False, "fingerprint sensor unavailable"
         if expected_template_id == 0:
             return False, "student has no fingerprint template"
@@ -82,7 +87,7 @@ class FingerprintService:
         return True, "fingerprint matched"
 
     def identify_template(self, timeout_ms):
-        if not self.ready:
+        if not self._ensure_ready():
             return False, 0, "fingerprint sensor unavailable"
 
         ok, message = self._wait_for_finger_image(timeout_ms)
@@ -99,7 +104,7 @@ class FingerprintService:
         return True, template_id, "fingerprint matched"
 
     def enroll_next_template(self):
-        if not self.ready:
+        if not self._ensure_ready():
             return False, 0, "fingerprint sensor unavailable"
 
         assigned_template_id = int(self.sensor.get_template_count()) + 1
@@ -115,8 +120,16 @@ class FingerprintService:
 
         log("finger", "remove finger")
         sleep_ms(2000)
-        while self.sensor.get_image() != FINGERPRINT_NOFINGER:
+        remove_started_at = monotonic_ms()
+        while ticks_diff(monotonic_ms(), remove_started_at) < 8000:
+            code = self.sensor.get_image()
+            if code == FINGERPRINT_NOFINGER:
+                break
+            if code != FINGERPRINT_OK:
+                return False, 0, "sensor stopped responding while waiting for finger removal"
             sleep_ms(100)
+        else:
+            return False, 0, "finger was not removed between scans"
 
         log("finger", "place same finger again")
         ok, message = self._wait_for_finger_image(15000)
