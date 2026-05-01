@@ -36,54 +36,22 @@ class StudentInfo:
         student_code="",
         full_name="",
         class_name="",
-        fingerprint_template_id=0,
     ):
         self.valid = valid
         self.id = student_id
         self.student_code = student_code
         self.full_name = full_name
         self.class_name = class_name
-        self.fingerprint_template_id = fingerprint_template_id
 
     @classmethod
     def from_dict(cls, payload):
         payload = payload or {}
-        template_id = payload.get("fingerprint_template_id", 0)
         return cls(
             valid=bool(payload),
             student_id=payload.get("id", 0),
             student_code=payload.get("student_code", ""),
             full_name=payload.get("full_name", ""),
             class_name=payload.get("class_name", ""),
-            fingerprint_template_id=template_id or 0,
-        )
-
-
-class DeviceCommandInfo:
-    def __init__(
-        self,
-        available=False,
-        command_id=0,
-        command_type="",
-        student_id=0,
-        student_code="",
-    ):
-        self.available = available
-        self.id = command_id
-        self.type = command_type
-        self.student_id = student_id
-        self.student_code = student_code
-
-    @classmethod
-    def from_dict(cls, payload):
-        payload = payload or {}
-        command_payload = payload.get("payload", {}) or {}
-        return cls(
-            available=bool(payload),
-            command_id=payload.get("id", 0),
-            command_type=payload.get("type", ""),
-            student_id=command_payload.get("student_id", 0),
-            student_code=command_payload.get("student_code", ""),
         )
 
 
