@@ -61,7 +61,7 @@ class R307Sensor:
             return False
         try:
             self._uart = UART(
-                2,
+                1,
                 baudrate=self._baudrate,
                 tx=self._tx_pin,
                 rx=self._rx_pin,
