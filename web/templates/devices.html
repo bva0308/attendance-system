@@ -55,7 +55,7 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Device</th><th>Connectivity</th><th>State</th><th>Last Seen</th><th>Firmware</th></tr>
+          <tr><th>Device</th><th>Connectivity</th><th>State</th><th>Last Seen</th><th>Firmware</th><th>Preview</th></tr>
         </thead>
         <tbody>
           {% for device in devices %}
@@ -82,9 +82,16 @@
             </td>
             <td>{{ device.last_seen_at|datetime_display }}</td>
             <td>{{ device.firmware_version or '-' }}</td>
+            <td>
+              {% if device.ip_address %}
+              <a class="button-link button-link-secondary button-link-compact" href="http://{{ device.ip_address }}/preview" target="_blank" rel="noopener">Open camera</a>
+              {% else %}
+              <span class="muted-copy">Waiting for IP</span>
+              {% endif %}
+            </td>
           </tr>
           {% else %}
-          <tr><td colspan="5" class="muted-copy">No devices are registered yet.</td></tr>
+          <tr><td colspan="6" class="muted-copy">No devices are registered yet.</td></tr>
           {% endfor %}
         </tbody>
       </table>
