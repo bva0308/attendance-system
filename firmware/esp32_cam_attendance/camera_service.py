@@ -24,32 +24,43 @@ class CameraService:
             log("camera", "camera module unavailable; capture() will return None")
             return False
 
-    def ready(self):
-        return self._ready
-
         try:
+            frame_size = getattr(
+                self._camera,
+                "FRAME_{0}".format(DeviceConfig.FRAME_SIZE.upper()),
+                None,
+            )
+            xclk_freq = getattr(self._camera, "XCLK_10MHz", 10000000)
+            jpeg_format = getattr(self._camera, "JPEG", None)
+            psram = getattr(self._camera, "PSRAM", None)
+            init_kwargs = {
+                "format": jpeg_format,
+                "framesize": frame_size,
+                "xclk_freq": xclk_freq,
+                "d0": Pins.Y2_GPIO_NUM,
+                "d1": Pins.Y3_GPIO_NUM,
+                "d2": Pins.Y4_GPIO_NUM,
+                "d3": Pins.Y5_GPIO_NUM,
+                "d4": Pins.Y6_GPIO_NUM,
+                "d5": Pins.Y7_GPIO_NUM,
+                "d6": Pins.Y8_GPIO_NUM,
+                "d7": Pins.Y9_GPIO_NUM,
+                "xclk": Pins.XCLK_GPIO_NUM,
+                "pclk": Pins.PCLK_GPIO_NUM,
+                "vsync": Pins.VSYNC_GPIO_NUM,
+                "href": Pins.HREF_GPIO_NUM,
+                "siod": Pins.SIOD_GPIO_NUM,
+                "sioc": Pins.SIOC_GPIO_NUM,
+                "pwdn": Pins.PWDN_GPIO_NUM,
+                "reset": Pins.RESET_GPIO_NUM if Pins.RESET_GPIO_NUM is not None else -1,
+                "quality": DeviceConfig.JPEG_QUALITY,
+            }
+            if psram is not None:
+                init_kwargs["fb_location"] = psram
+
             self._camera.init(
                 0,
-                format=self._camera.JPEG,
-                framesize=getattr(self._camera, DeviceConfig.FRAME_SIZE, None),
-                xclk_freq=20000000,
-                d0=Pins.Y2_GPIO_NUM,
-                d1=Pins.Y3_GPIO_NUM,
-                d2=Pins.Y4_GPIO_NUM,
-                d3=Pins.Y5_GPIO_NUM,
-                d4=Pins.Y6_GPIO_NUM,
-                d5=Pins.Y7_GPIO_NUM,
-                d6=Pins.Y8_GPIO_NUM,
-                d7=Pins.Y9_GPIO_NUM,
-                xclk=Pins.XCLK_GPIO_NUM,
-                pclk=Pins.PCLK_GPIO_NUM,
-                vsync=Pins.VSYNC_GPIO_NUM,
-                href=Pins.HREF_GPIO_NUM,
-                siod=Pins.SIOD_GPIO_NUM,
-                sioc=Pins.SIOC_GPIO_NUM,
-                pwdn=Pins.PWDN_GPIO_NUM,
-                reset=Pins.RESET_GPIO_NUM,
-                quality=DeviceConfig.JPEG_QUALITY,
+                **init_kwargs
             )
             self._ready = True
             log("camera", "ready")
@@ -58,9 +69,14 @@ class CameraService:
             log("camera", "init failed: {0}".format(exc))
             return False
 
+    def ready(self):
+        return self._ready or self._camera is not None
+
     def capture(self):
         if self._capture_provider is not None:
             return self._capture_provider()
+        if not self._ready:
+            self.begin()
         if not self._ready or self._camera is None:
             log("camera", "capture failed")
             return None
