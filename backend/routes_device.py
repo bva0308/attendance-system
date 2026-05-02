@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Blueprint, jsonify, request
 
@@ -68,6 +68,14 @@ def heartbeat():
 @device_bp.route("/commands/next", methods=["GET"])
 @device_required
 def next_command():
+    stale_before = datetime.utcnow() - timedelta(seconds=60)
+    (
+        DeviceCommand.query.filter_by(device_id=request.device.id, status="in_progress")
+        .filter(DeviceCommand.created_at < stale_before)
+        .update({"status": "failed", "completed_at": datetime.utcnow()})
+    )
+    db.session.commit()
+
     command = (
         DeviceCommand.query.filter_by(device_id=request.device.id, status="queued")
         .order_by(DeviceCommand.created_at.asc())
