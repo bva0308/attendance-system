@@ -2,39 +2,31 @@ try:
     from .api_client import ApiClient
     from .camera_service import CameraService
     from .config import DeviceConfig
-    from .fingerprint_service import FingerprintService
     from .qr_service import QrService
-    from .relay_service import RelayService
     from .runtime import StatusServer, WifiAdapter, log, sleep_ms
-    from .state_machine import AttendanceStateMachine
+    from .state_machine import CameraStateMachine
     from .storage_service import StorageService
 except ImportError:
     from api_client import ApiClient
     from camera_service import CameraService
     from config import DeviceConfig
-    from fingerprint_service import FingerprintService
     from qr_service import QrService
-    from relay_service import RelayService
     from runtime import StatusServer, WifiAdapter, log, sleep_ms
-    from state_machine import AttendanceStateMachine
+    from state_machine import CameraStateMachine
     from storage_service import StorageService
 
 
-class AttendanceDeviceApp:
+class CameraDeviceApp:
     def __init__(self):
         self.wifi = WifiAdapter()
         self.storage_service = StorageService()
         self.camera_service = CameraService()
-        self.fingerprint_service = FingerprintService()
         self.api_client = ApiClient(wifi=self.wifi)
-        self.relay_service = RelayService()
         self.qr_service = QrService(self.camera_service, self.api_client)
-        self.state_machine = AttendanceStateMachine(
+        self.state_machine = CameraStateMachine(
             self.camera_service,
-            self.fingerprint_service,
             self.api_client,
             self.qr_service,
-            self.relay_service,
             self.storage_service,
             self.wifi,
         )
@@ -42,6 +34,7 @@ class AttendanceDeviceApp:
             enabled=DeviceConfig.ENABLE_STATUS_WEB,
             port=DeviceConfig.STATUS_WEB_PORT,
             state_provider=self._status_snapshot,
+            capture_provider=self.camera_service.capture,
         )
 
     def _status_snapshot(self):
@@ -66,7 +59,7 @@ class AttendanceDeviceApp:
 
     def setup(self):
         sleep_ms(1500)
-        log("boot", "secure attendance prototype starting")
+        log("boot", "camera-only attendance device starting")
 
         self.storage_service.begin()
         boot_count = self.storage_service.increment_boot_count()
@@ -75,10 +68,8 @@ class AttendanceDeviceApp:
             "count={0} last_state={1}".format(boot_count, self.storage_service.get_last_state()),
         )
 
-        self.relay_service.begin()
         self.connect_wifi()
         self.camera_service.begin()
-        self.fingerprint_service.begin()
         self.status_server.start()
         self.state_machine.begin()
 
@@ -91,7 +82,7 @@ class AttendanceDeviceApp:
 
 
 def main():
-    app = AttendanceDeviceApp()
+    app = CameraDeviceApp()
     app.setup()
     app.loop_forever()
 
