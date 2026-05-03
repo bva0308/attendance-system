@@ -2,7 +2,7 @@
 
 ## Active Firmware Pin Map
 
-The current MicroPython firmware uses UART2 for the R307 link and expects the wiring below.
+The current MicroPython firmware uses a secondary UART for the R307 link and expects the wiring below.
 Development mode assumes a stable 5V USB supply shared by the ESP32 board, R307, and relay module.
 
 | Module | Pin | Connect To | Notes |
@@ -11,8 +11,8 @@ Development mode assumes a stable 5V USB supply shared by the ESP32 board, R307,
 | ESP32 board | GND | Common ground | Share with R307 and relay |
 | R307 | VCC | VIN / 5V | Most R307 boards expect 5V power |
 | R307 | GND | GND | Common ground required |
-| R307 | TX | GPIO16 | Sensor sends data into ESP32 RX2 |
-| R307 | RX | GPIO17 | ESP32 TX2 sends commands to sensor |
+| R307 | TX | GPIO12 / IO12 | Sensor sends data into ESP32 receive pin |
+| R307 | RX | GPIO14 / IO14 | ESP32 transmit pin sends commands to sensor |
 | R307 | Pins 5 and 6 | Not connected | Optional lines, safe to leave open for this project |
 | Relay module | VCC | 5V | Do not power relay coil from weak 3.3V rail |
 | Relay module | GND | GND | Common ground required |
@@ -20,10 +20,10 @@ Development mode assumes a stable 5V USB supply shared by the ESP32 board, R307,
 
 ## UART Notes
 
-- The code now names these pins explicitly as `R307_UART_RX_PIN = 16` and `R307_UART_TX_PIN = 17` to match the actual ESP32 UART direction.
-- This means the sensor's `TX` wire must land on the ESP32 receive pin `GPIO16`.
-- The sensor's `RX` wire must land on the ESP32 transmit pin `GPIO17`.
-- Older notes that described `GPIO14/GPIO15` are no longer the source of truth for this repo.
+- The code names these pins explicitly as `R307_UART_RX_PIN = 12` and `R307_UART_TX_PIN = 14` to match the actual ESP32 UART direction on this ESP32-CAM board.
+- This means the sensor's `TX` wire must land on the ESP32 receive pin `GPIO12`.
+- The sensor's `RX` wire must land on the ESP32 transmit pin `GPIO14`.
+- Older notes that described `GPIO16/GPIO17` or `GPIO16/GPIO15` are no longer the source of truth for this repo.
 
 ## Flashing Rule While Debugging Sensor Wiring
 
@@ -34,14 +34,14 @@ If `esptool` stalls or the erase fails mid-transfer:
 1. Unplug all four R307 wires from the ESP32 or breadboard.
 2. Hold `BOOT`, tap `EN`, then release `BOOT` after the board enters download mode.
 3. Flash or erase the ESP32 with only USB power connected.
-4. Reconnect `VCC`, `GND`, `TX -> GPIO16`, and `RX -> GPIO17`.
+4. Reconnect `VCC`, `GND`, `TX -> GPIO12`, and `RX -> GPIO14`.
 5. Boot again and check serial logs for `[finger] sensor online` or `[finger] sensor not detected`.
 
 ## Board-Level Cautions
 
-- Avoid `GPIO0`, `GPIO2`, and `GPIO12` for the fingerprint sensor because they are boot-sensitive strapping pins.
+- Avoid `GPIO0` and `GPIO2` for the fingerprint sensor because they are boot-sensitive strapping pins.
 - Keep the relay off the same signal pins used for UART or flashing.
-- If you are using an ESP32-CAM variant with PSRAM tied to `GPIO16/GPIO17`, you may need a different board or a different fingerprint UART mapping. The active project code assumes these pins are available.
+- If your ESP32-CAM variant does not expose `GPIO12/GPIO14`, use a separate ESP32 DevKit for the R307 or choose another UART mapping in `pins.py`.
 
 ## Power Design
 
