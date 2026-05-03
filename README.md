@@ -190,8 +190,8 @@ You should replace the admin hash before presentation use.
 2. Wire the R307 as follows:
    - `VCC` to `VIN / 5V`
    - `GND` to `GND`
-   - `TX` to `GPIO16`
-   - `RX` to `GPIO17`
+   - `TX` to `GPIO12` / `IO12`
+   - `RX` to `GPIO14` / `IO14`
 3. Pull `GPIO0` to `GND` for flashing.
 4. Press reset or power cycle the board.
 5. After flashing your target firmware build, remove `GPIO0` from `GND`.
