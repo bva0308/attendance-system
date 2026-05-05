@@ -36,12 +36,15 @@ class StudentInfo:
         student_code="",
         full_name="",
         class_name="",
+        fingerprint_template_id=0,
     ):
         self.valid = valid
         self.id = student_id
+        self.student_id = student_id
         self.student_code = student_code
         self.full_name = full_name
         self.class_name = class_name
+        self.fingerprint_template_id = int(fingerprint_template_id or 0)
 
     @classmethod
     def from_dict(cls, payload):
@@ -52,6 +55,7 @@ class StudentInfo:
             student_code=payload.get("student_code", ""),
             full_name=payload.get("full_name", ""),
             class_name=payload.get("class_name", ""),
+            fingerprint_template_id=payload.get("fingerprint_template_id", 0),
         )
 
 
