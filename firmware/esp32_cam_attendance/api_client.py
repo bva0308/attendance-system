@@ -81,3 +81,51 @@ class ApiClient:
         if not result.ok or not parsed:
             return result, StudentInfo()
         return GenericResult(True, "face verified"), StudentInfo.from_dict(parsed.get("student"))
+
+    def mark_attendance(self, session_token, student_id, by_qr, by_face, by_fingerprint):
+        payload = {
+            "session_token": session_token,
+            "student_id": student_id,
+            "verified_by_qr": by_qr,
+            "verified_by_face": by_face,
+            "verified_by_fingerprint": by_fingerprint,
+        }
+        status_code, body = self.http.request(
+            "POST",
+            self._endpoint_url("/api/device/mark-attendance"),
+            headers=dict(self._headers(), **{"Content-Type": "application/json"}),
+            json_body=payload,
+        )
+        parsed, result = self._parse_json_response(status_code, body, "invalid mark-attendance response")
+        return result.ok, result.message
+
+    def fingerprint_status(self, session_token, student_id):
+        path = "/api/device/fingerprint-status?session_token={0}&student_id={1}".format(session_token, student_id)
+        status_code, body = self.http.request(
+            "GET",
+            self._endpoint_url(path),
+            headers=self._headers(),
+        )
+        parsed, result = self._parse_json_response(status_code, body, "invalid fingerprint status response")
+        if not result.ok or not parsed:
+            return "unknown", result.message
+        return parsed.get("status", "unknown"), parsed.get("message", "")
+
+    def log_verification_failure(self, session_token, student_id, status, note):
+        payload = {
+            "session_token": session_token,
+            "student_id": student_id,
+            "status": status,
+            "note": note,
+            "verified_by_qr": True,
+            "verified_by_face": student_id is not None,
+            "verified_by_fingerprint": False,
+        }
+        status_code, body = self.http.request(
+            "POST",
+            self._endpoint_url("/api/device/log-verification-failure"),
+            headers=dict(self._headers(), **{"Content-Type": "application/json"}),
+            json_body=payload,
+        )
+        parsed, result = self._parse_json_response(status_code, body, "invalid failure-log response")
+        return result.ok
