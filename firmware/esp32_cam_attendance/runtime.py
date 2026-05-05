@@ -309,17 +309,34 @@ class StatusServer:
         client.send(payload)
 
     def _preview_html(self, state):
+        state_name = str(state.get("state", "UNKNOWN"))
+        message = str(state.get("message", ""))
+        if state_name in ("WAIT_FINGER", "VERIFY_FINGER"):
+            body = (
+                "<div class='panel'>"
+                "<h2>Fingerprint verification</h2>"
+                "<p class='big'>" + message + "</p>"
+                "<p class='hint'>Keep your finger flat on the sensor until this page changes.</p>"
+                "</div>"
+                "<script>setTimeout(function(){location.reload()},1000)</script>"
+            )
+        else:
+            body = (
+                "<img id='cam' src='/capture.jpg?0' alt='ESP32 camera preview'>"
+                "<script>setInterval(function(){document.getElementById('cam').src='/capture.jpg?'+Date.now()},1000)</script>"
+            )
         return (
             "<!doctype html><html><head>"
             "<meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<title>ESP32-CAM Preview</title>"
             "<style>body{font-family:system-ui;margin:20px;background:#111;color:#fff}"
             "img{max-width:100%;height:auto;border:1px solid #444}"
-            ".meta{color:#bbb;margin-bottom:12px}</style>"
+            ".meta{color:#bbb;margin-bottom:12px}"
+            ".panel{border:1px solid #444;padding:20px;max-width:720px;background:#181818}"
+            ".big{font-size:24px;line-height:1.35}.hint{color:#aaa}</style>"
             "</head><body><h1>ESP32-CAM Preview</h1>"
-            "<p class='meta'>State: " + str(state.get("state", "UNKNOWN")) + "<br>Message: " + str(state.get("message", "")) + "</p>"
-            "<img id='cam' src='/capture.jpg?0' alt='ESP32 camera preview'>"
-            "<script>setInterval(function(){document.getElementById('cam').src='/capture.jpg?'+Date.now()},1000)</script>"
+            "<p class='meta'>State: " + state_name + "<br>Message: " + message + "</p>"
+            + body +
             "</body></html>"
         ).encode("utf-8")
 

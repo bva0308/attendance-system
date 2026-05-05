@@ -2,7 +2,9 @@ try:
     from .api_client import ApiClient
     from .camera_service import CameraService
     from .config import DeviceConfig
+    from .fingerprint_service import FingerprintService
     from .qr_service import QrService
+    from .relay_service import RelayService
     from .runtime import StatusServer, WifiAdapter, log, sleep_ms
     from .state_machine import CameraStateMachine
     from .storage_service import StorageService
@@ -10,7 +12,9 @@ except ImportError:
     from api_client import ApiClient
     from camera_service import CameraService
     from config import DeviceConfig
+    from fingerprint_service import FingerprintService
     from qr_service import QrService
+    from relay_service import RelayService
     from runtime import StatusServer, WifiAdapter, log, sleep_ms
     from state_machine import CameraStateMachine
     from storage_service import StorageService
@@ -21,6 +25,8 @@ class CameraDeviceApp:
         self.wifi = WifiAdapter()
         self.storage_service = StorageService()
         self.camera_service = CameraService()
+        self.fingerprint_service = FingerprintService()
+        self.relay_service = RelayService()
         self.api_client = ApiClient(wifi=self.wifi)
         self.qr_service = QrService(self.camera_service, self.api_client)
         self.state_machine = CameraStateMachine(
@@ -29,6 +35,8 @@ class CameraDeviceApp:
             self.qr_service,
             self.storage_service,
             self.wifi,
+            self.fingerprint_service,
+            self.relay_service,
         )
         self.status_server = StatusServer(
             enabled=DeviceConfig.ENABLE_STATUS_WEB,
@@ -43,6 +51,7 @@ class CameraDeviceApp:
             "message": self.state_machine.last_message(),
             "ip_address": self.wifi.ip_address(),
             "last_error": self.storage_service.get_last_error(),
+            "fingerprint_ready": self.fingerprint_service.sensor_ready(),
         }
 
     def connect_wifi(self):
@@ -59,7 +68,7 @@ class CameraDeviceApp:
 
     def setup(self):
         sleep_ms(1500)
-        log("boot", "camera-only attendance device starting")
+        log("boot", "full attendance device starting (camera + fingerprint)")
 
         self.storage_service.begin()
         boot_count = self.storage_service.increment_boot_count()
@@ -70,6 +79,8 @@ class CameraDeviceApp:
 
         self.connect_wifi()
         self.camera_service.begin()
+        self.fingerprint_service.begin()
+        self.relay_service.begin()
         self.status_server.start()
         self.state_machine.begin()
 
