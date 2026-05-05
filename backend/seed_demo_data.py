@@ -21,6 +21,14 @@ with app.app_context():
         )
         db.session.add(device)
 
+    if not Device.query.filter_by(device_id="esp32finger-lab-01").first():
+        device = Device(
+            device_id="esp32finger-lab-01",
+            display_name="Lab Fingerprint Device",
+            api_key_hash=generate_password_hash("demo-device-key"),
+        )
+        db.session.add(device)
+
     if not Student.query.filter_by(student_code="STU001").first():
         db.session.add(Student(student_code="STU001", full_name="Demo Student", email="demo@example.com", class_name="ECE-8"))
 
