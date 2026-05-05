@@ -7,6 +7,12 @@ except ImportError:
     from pins import Pins
     from runtime import import_camera_module, log
 
+try:
+    import _thread
+    _camera_lock = _thread.allocate_lock()
+except ImportError:
+    _camera_lock = None
+
 
 class CameraService:
     def __init__(self, capture_provider=None):
@@ -73,21 +79,28 @@ class CameraService:
         return self._ready or self._camera is not None
 
     def capture(self):
-        if self._capture_provider is not None:
-            return self._capture_provider()
-        if not self._ready:
-            self.begin()
-        if not self._ready or self._camera is None:
-            log("camera", "capture failed")
-            return None
+        if _camera_lock is not None:
+            if not _camera_lock.acquire(False):
+                return None
         try:
-            frame = self._camera.capture()
-            if not frame:
+            if self._capture_provider is not None:
+                return self._capture_provider()
+            if not self._ready:
+                self.begin()
+            if not self._ready or self._camera is None:
                 log("camera", "capture failed")
-            return frame
-        except Exception as exc:
-            log("camera", "capture failed: {0}".format(exc))
-            return None
+                return None
+            try:
+                frame = self._camera.capture()
+                if not frame:
+                    log("camera", "capture failed")
+                return frame
+            except Exception as exc:
+                log("camera", "capture failed: {0}".format(exc))
+                return None
+        finally:
+            if _camera_lock is not None:
+                _camera_lock.release()
 
     def release(self, frame):
         return None
