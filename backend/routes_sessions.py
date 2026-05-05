@@ -97,7 +97,12 @@ def session_deactivate(session_id: int):
 
 
 @sessions_bp.route("/sessions/<int:session_id>/qr.png")
-@login_required
 def session_qr_png(session_id: int):
     target = Session.query.get_or_404(session_id)
     return Response(generate_qr_png(target.qr_payload), mimetype="image/png")
+
+
+@sessions_bp.route("/sessions/<int:session_id>/qr")
+def session_qr_page(session_id: int):
+    target = Session.query.get_or_404(session_id)
+    return render_template("session_qr.html", attendance_session=target)
