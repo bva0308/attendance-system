@@ -122,6 +122,23 @@ class VerificationEvent(db.Model):
     session = relationship("Session")
 
 
+class PendingFingerprintVerification(db.Model):
+    __tablename__ = "pending_fingerprint_verifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
+    session_id = db.Column(db.Integer, db.ForeignKey("sessions.id"), nullable=False)
+    camera_device_id = db.Column(db.Integer, db.ForeignKey("devices.id"), nullable=True)
+    status = db.Column(db.String(32), default="pending", nullable=False)
+    message = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    completed_at = db.Column(db.DateTime, nullable=True)
+
+    student = relationship("Student")
+    session = relationship("Session")
+    camera_device = relationship("Device")
+
+
 class DeviceCommand(db.Model):
     __tablename__ = "device_commands"
 
@@ -130,6 +147,7 @@ class DeviceCommand(db.Model):
     command_type = db.Column(db.String(64), nullable=False)
     payload_json = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(32), default="queued", nullable=False)
+    result_message = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     completed_at = db.Column(db.DateTime, nullable=True)
 
