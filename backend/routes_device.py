@@ -5,7 +5,15 @@ from flask import Blueprint, jsonify, request
 
 from auth import device_required
 from database import db
-from models import AttendanceRecord, DeviceCommand, FingerprintProfile, Session, Student, VerificationEvent
+from models import (
+    AttendanceRecord,
+    DeviceCommand,
+    FingerprintProfile,
+    PendingFingerprintVerification,
+    Session,
+    Student,
+    VerificationEvent,
+)
 from services_face import verify_face_for_session
 from services_qr import decode_qr_from_bytes
 
@@ -43,6 +51,22 @@ def _serialize_student(student: Student | None):
 def _session_is_open(session: Session) -> bool:
     now = datetime.utcnow()
     return session.is_active and session.starts_at <= now <= session.ends_at
+
+
+def _serialize_pending_fingerprint(pending: PendingFingerprintVerification | None):
+    if not pending:
+        return None
+    return {
+        "id": pending.id,
+        "session_token": pending.session.session_token,
+        "session_title": pending.session.title,
+        "student_id": pending.student.id,
+        "student_code": pending.student.student_code,
+        "student_name": pending.student.full_name,
+        "fingerprint_template_id": (
+            pending.student.fingerprint_profile.template_id if pending.student.fingerprint_profile else None
+        ),
+    }
 
 
 @device_bp.route("/heartbeat", methods=["POST"])
@@ -105,6 +129,7 @@ def complete_command(command_id: int):
     command = DeviceCommand.query.filter_by(id=command_id, device_id=request.device.id).first_or_404()
     payload = request.get_json(force=True, silent=True) or {}
     command.status = payload.get("status", "completed")
+    command.result_message = payload.get("message")
     command.completed_at = datetime.utcnow()
 
     if command.command_type == "enroll_fingerprint" and command.status == "completed":
@@ -152,7 +177,131 @@ def verify_face():
     if not result.matched:
         return jsonify({"ok": False, "error": result.reason, "distance": result.distance}), 400
 
+    existing = PendingFingerprintVerification.query.filter_by(
+        student_id=result.student.id,
+        session_id=session.id,
+        status="pending",
+    ).first()
+    if existing is None:
+        db.session.add(
+            PendingFingerprintVerification(
+                student=result.student,
+                session=session,
+                camera_device=request.device,
+                message="face verified; waiting for fingerprint",
+            )
+        )
+        db.session.commit()
+
     return jsonify({"ok": True, "student": _serialize_student(result.student), "distance": result.distance})
+
+
+@device_bp.route("/pending-fingerprint", methods=["GET"])
+@device_required
+def pending_fingerprint():
+    active_session = Session.query.filter_by(is_active=True).order_by(Session.starts_at.desc()).first()
+    stale_query = PendingFingerprintVerification.query.filter_by(status="pending")
+    if active_session is None:
+        stale_query.update(
+            {
+                "status": "failed",
+                "message": "no active session",
+                "completed_at": datetime.utcnow(),
+            }
+        )
+    else:
+        stale_query.filter(PendingFingerprintVerification.session_id != active_session.id).update(
+            {
+                "status": "failed",
+                "message": "session changed before fingerprint verification",
+                "completed_at": datetime.utcnow(),
+            }
+        )
+    db.session.commit()
+
+    pending = (
+        PendingFingerprintVerification.query.filter_by(status="pending")
+        .order_by(PendingFingerprintVerification.created_at.asc())
+        .first()
+    )
+    return jsonify({"ok": True, "pending": _serialize_pending_fingerprint(pending)})
+
+
+@device_bp.route("/fingerprint-status", methods=["GET"])
+@device_required
+def fingerprint_status():
+    session_token = request.args.get("session_token", "")
+    student_id = int(request.args.get("student_id") or 0)
+    session = Session.query.filter_by(session_token=session_token).first()
+    if session is None or student_id <= 0:
+        return jsonify({"ok": False, "error": "session_token and student_id are required"}), 400
+    pending = (
+        PendingFingerprintVerification.query.filter_by(session_id=session.id, student_id=student_id)
+        .order_by(PendingFingerprintVerification.created_at.desc())
+        .first()
+    )
+    if pending is None:
+        return jsonify({"ok": True, "status": "failed", "message": "no fingerprint request"})
+    if not session.is_active:
+        pending.status = "failed"
+        pending.message = "session changed before fingerprint verification"
+        pending.completed_at = datetime.utcnow()
+        db.session.commit()
+        return jsonify({"ok": True, "status": pending.status, "message": pending.message})
+    return jsonify({"ok": True, "status": pending.status, "message": pending.message or ""})
+
+
+@device_bp.route("/complete-fingerprint", methods=["POST"])
+@device_required
+def complete_fingerprint():
+    payload = request.get_json(force=True)
+    pending_id = int(payload.get("pending_id") or 0)
+    template_id = int(payload.get("template_id") or 0)
+
+    pending = PendingFingerprintVerification.query.filter_by(id=pending_id, status="pending").first()
+    if pending is None:
+        return jsonify({"ok": False, "error": "pending fingerprint request not found"}), 404
+    if not _session_is_open(pending.session):
+        pending.status = "failed"
+        pending.message = "session closed before fingerprint verification"
+        pending.completed_at = datetime.utcnow()
+        db.session.commit()
+        return jsonify({"ok": False, "error": "session is not currently accepting attendance"}), 409
+
+    profile = pending.student.fingerprint_profile
+    if profile is None:
+        return jsonify({"ok": False, "error": "student has no fingerprint template"}), 400
+    if int(profile.template_id) != template_id:
+        return jsonify({"ok": False, "error": "fingerprint does not match face-verified student"}), 400
+
+    duplicate = AttendanceRecord.query.filter_by(
+        student_id=pending.student_id,
+        session_id=pending.session_id,
+        status="present",
+    ).first()
+    if duplicate and not pending.session.allow_duplicates:
+        pending.status = "failed"
+        pending.message = "duplicate attendance rejected"
+        pending.completed_at = datetime.utcnow()
+        db.session.commit()
+        return jsonify({"ok": False, "error": "duplicate attendance rejected"}), 409
+
+    record = AttendanceRecord(
+        student=pending.student,
+        session=pending.session,
+        device_id=request.device.id,
+        verified_by_qr=True,
+        verified_by_face=True,
+        verified_by_fingerprint=True,
+        note="verified by ESP32-CAM + fingerprint node",
+        status="present",
+    )
+    pending.status = "completed"
+    pending.message = "attendance marked"
+    pending.completed_at = datetime.utcnow()
+    db.session.add(record)
+    db.session.commit()
+    return jsonify({"ok": True, "attendance_id": record.id, "timestamp": record.created_at.isoformat()})
 
 
 @device_bp.route("/resolve-fingerprint-student", methods=["POST"])
