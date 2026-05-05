@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Session QR{% endblock %}
+{% block content %}
+<section class="page-header">
+  <div class="page-header__content">
+    <span class="page-kicker">Session QR</span>
+    <h2 class="page-title">{{ attendance_session.title }}</h2>
+    <p class="page-copy">{{ attendance_session.class_name }} - {{ 'Active' if attendance_session.is_active else 'Inactive' }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="button-link button-link-secondary" href="{{ url_for('sessions.sessions_list') }}">Back to sessions</a>
+  </div>
+</section>
+
+<section class="qr-stage">
+  <img class="qr-stage__image" src="{{ url_for('sessions.session_qr_png', session_id=attendance_session.id) }}" alt="Session QR">
+  <div class="qr-stage__meta">
+    <strong>Hold this QR steady in front of the ESP32-CAM.</strong>
+    <span class="mono">{{ attendance_session.qr_payload }}</span>
+  </div>
+</section>
+{% endblock %}
