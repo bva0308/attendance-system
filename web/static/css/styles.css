@@ -615,6 +615,35 @@ code,
   color: var(--ink-soft);
 }
 
+.qr-open-link {
+  margin-top: 0.55rem;
+}
+
+.qr-stage {
+  min-height: calc(100vh - 240px);
+  display: grid;
+  place-items: center;
+  gap: 1.1rem;
+  padding: 2rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: #fff;
+}
+
+.qr-stage__image {
+  width: min(72vmin, 620px);
+  height: min(72vmin, 620px);
+  image-rendering: pixelated;
+}
+
+.qr-stage__meta {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  color: var(--ink);
+  text-align: center;
+}
+
 .auth-card {
   max-width: 560px;
   margin: 4.2rem auto 0;

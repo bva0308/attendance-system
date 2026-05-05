@@ -44,6 +44,7 @@
           <td>
             <img class="qr-thumb" src="{{ url_for('sessions.session_qr_png', session_id=item.id) }}" alt="Session QR">
             <div class="qr-caption">Scan at check-in</div>
+            <a class="button-link button-link-secondary button-link-compact qr-open-link" href="{{ url_for('sessions.session_qr_png', session_id=item.id) }}" target="_blank" rel="noopener">Open QR</a>
           </td>
           <td>
             <span class="status-pill {{ 'status-pill-active' if item.is_active else 'status-pill-muted' }}">
