@@ -11,3 +11,4 @@ uploads/
 *.log
 *.claude
 firmware/device_settings.json
+*.venv311/
