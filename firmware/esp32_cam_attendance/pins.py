@@ -18,3 +18,7 @@ class Pins:
     PCLK_GPIO_NUM = 22
 
     STATUS_LED_PIN = 33
+
+    R307_UART_RX_PIN = 12
+    R307_UART_TX_PIN = 14
+    RELAY_PIN = 13
